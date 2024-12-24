@@ -32,34 +32,37 @@ export default function Login() {
   async function handleLogin(e) {
     e.preventDefault();
 
+    // Validate username and password lengths
+    if (username.trim().length < 4) {
+      toast.error("Username must be at least 4 characters.");
+      return;
+    }
+    if (password.trim().length < 8) {
+      toast.error("Password must be at least 8 characters.");
+      return;
+    }
+
     try {
-      const response = await axios.post("/login", {
+      const response = await axios.post("/auth/login", {
         username: username.trim(),
         password: password.trim(),
       });
 
-      const userDataResponse = await axios.get(
-        `/users?name=${username.trim()}&password=${password.trim()}`
-      );
-      const users = userDataResponse.data;
+      // Assuming response.data is a single user object
+      const user = response.data;
 
-      if (users.length === 0) {
-        throw new Error("Invalid username or password");
-      }
+      if (user && user.name === username && user.role && user.id) {
+        // Store user data in localStorage and navigate based on role
+        localStorage.setItem("loggedInUser", JSON.stringify(user));
+        toast.success("Login successful!");
 
-      const user = users.find(
-        (u) => u.name === username && u.password === password
-      );
-      if (!user) {
-        throw new Error("Invalid username or password");
-      }
-
-      toast.success("Login successfull!");
-
-      if (user.role === "admin") {
-        navigate("/usersList");
+        if (user.role === "admin") {
+          navigate("/usersList");
+        } else {
+          navigate("/devicesList/urlProfiles");
+        }
       } else {
-        navigate("/devicesList/urlProfiles");
+        toast.error("Invalid username or password");
       }
     } catch (err) {
       console.error("Login error:", err);

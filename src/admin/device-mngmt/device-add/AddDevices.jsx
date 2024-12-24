@@ -30,24 +30,24 @@ export default function AddDevice() {
    *
    * @async
    * @function fetchUrlProfiles
-   * @throws {Error} If the data fetched from the server is not an array.
    */
   useEffect(() => {
     async function fetchUrlProfiles() {
       try {
-        const response = await axios.get("/urlProfiles");
-        if (!response) {
-          toast.error("failed to fetch urlprofiles");
-        }
-        const data = await response.data;
-
-        if (Array.isArray(data)) {
-          setUrlProfiles(data.map((profile) => profile.name));
+        const response = await axios.get("/devices/urlProfiles");
+        if (response.status === 200) {
+          const data = response.data;
+          if (Array.isArray(data)) {
+            setUrlProfiles(data.map((profile) => profile.name));
+          } else {
+            throw new Error("Invalid data format: Expected an array");
+          }
         } else {
-          throw new Error("Data is not an array");
+          toast.error("Failed to fetch URL profiles. Please try again.");
         }
       } catch (error) {
         console.error("Error fetching URL profiles:", error);
+        toast.error("An error occurred while fetching URL profiles.");
       }
     }
 
@@ -58,18 +58,19 @@ export default function AddDevice() {
    * Handles the form submission for adding a new device.
    *
    * This function validates that the device name and URL profile are provided, and sends a POST request to the server.
-   * Upon successful submission, new device is added successfully and displays a success message or displays error message on failer
+   * Upon successful submission, new device is added successfully and displays a success message or displays error message on failure.
    *
    * @async
    * @function handleSubmit
    * @param {Event} e - The form submission event.
-   * @throws {Error} If the server response is not successful.
    */
   async function handleSubmit(e) {
     e.preventDefault();
 
     if (!device.name || !device.urlProfile) {
-      toast.warn("Device name and URL profile required");
+      toast.warn("Device name and URL profile are required.", {
+        autoClose: 500,
+      });
       return;
     }
 
@@ -80,15 +81,20 @@ export default function AddDevice() {
         special: device.special,
       });
 
-      if (response) {
+      if (response.status === 200) {
         toast.success("Device added successfully!");
         setTimeout(() => navigate("/devicesList"), 300);
       } else {
-        toast.error("Failed to add device. Please try again later.");
+        toast.error("Failed to add device. Please try again.");
       }
     } catch (err) {
-      toast.error("An error occurred. Please try again.");
-      console.error(err);
+      console.error("Error adding device:", err);
+      toast.error(
+        "An error occurred while adding the device. Please try again.",
+        {
+          autoClose: 500,
+        }
+      );
     }
   }
 
@@ -105,6 +111,7 @@ export default function AddDevice() {
           <h3 className="fw-bold text-dark">Add New Device</h3>
           <div className="bg-primary mt-2" style={{ height: "2px" }}></div>
         </div>
+
         <div className="mb-3">
           <label className="form-label">Device Name</label>
           <div className="position-relative mb-3">
@@ -120,6 +127,7 @@ export default function AddDevice() {
               placeholder="Enter device name"
               value={device.name}
               onChange={(e) => setDevice({ ...device, name: e.target.value })}
+              required
             />
           </div>
         </div>
@@ -133,8 +141,9 @@ export default function AddDevice() {
             onChange={(e) =>
               setDevice({ ...device, urlProfile: e.target.value })
             }
+            required
           >
-            <option>Select</option>
+            <option value="">Select</option>
             {Array.isArray(urlProfiles) &&
               urlProfiles.map((profileName, index) => (
                 <option key={index} value={profileName}>
@@ -157,13 +166,13 @@ export default function AddDevice() {
           </label>
         </div>
 
-        <div className="d-flex flex-column flex-sm-row gap-3">
-          <button type="submit" className="btn btn-primary w-100 w-sm-auto">
+        <div className="d-flex justify-content-end gap-2">
+          <button type="submit" className="btn btn-primary ">
             Add
           </button>
           <button
             type="button"
-            className="btn btn-secondary w-100 w-sm-auto"
+            className="btn btn-secondary"
             onClick={() => navigate("/devicesList")}
           >
             Cancel

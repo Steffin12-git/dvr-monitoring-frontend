@@ -10,7 +10,7 @@ import { toast, ToastContainer } from "react-toastify";
 /**
  * Signup Component
  *
- * Provides a user interface for admins to add new users by providing their username, role, and password details.
+ * Provides a user interface for admins to add new users by providing their name, role, and password details.
  * Utilizes form inputs and validates user input before sending it to the server.
  *
  * @component
@@ -19,7 +19,7 @@ import { toast, ToastContainer } from "react-toastify";
 export default function Signup() {
   const navigate = useNavigate();
   const [formData, setFormData] = useState({
-    username: "",
+    name: "",
     role: "Select",
     password: "",
     confirmPassword: "",
@@ -40,11 +40,6 @@ export default function Signup() {
   };
 
   /**
-   * Retrieves the role from the cookie.
-   *
-   * @returns {Object|null} - The parsed user role if valid, otherwise null.
-   */
-  /**
    * Handles the submission of the form to add a new user.
    *
    * @param {Event} e - The form submission event.
@@ -53,52 +48,82 @@ export default function Signup() {
     e.preventDefault();
     setError("");
 
-    const { username, role, password, confirmPassword } = formData;
+    const { name, role, password, confirmPassword } = formData;
 
-    if (
-      !username ||
-      role === "Select" ||
-      !role ||
-      !password ||
-      !confirmPassword
-    ) {
+    if (!name || role === "Select" ) {
       setError("All fields are required.");
-      toast.error("All fields are required!");
+      toast.error("name and role are required!",{
+        autoClose: 500,
+      });
+      return;
+    }
+
+    if (name.length < 4) {
+      setError("Name must be at least 4 characters.");
+      toast.error("Name must be at least 4 characters!",{
+        autoClose: 500,
+      });
+      return;
+    }
+
+    if (password.length < 8) {
+      setError("Password must be at least 8 characters.");
+      toast.error("Password must be at least 8 characters!",{
+        autoClose: 500,
+      });
       return;
     }
 
     if (password !== confirmPassword) {
       setError("Passwords do not match.");
-      toast.error("Passwords do not match!");
+      toast.error("Passwords do not match!",{
+        autoClose: 500,
+      });
+      return;
+    }
+
+    const validRoles = ["normal", "admin"];
+    if (!validRoles.includes(role.toLowerCase())) {
+      setError("Invalid role selected.");
+      toast.error("Invalid role selected!",{
+        autoClose: 500,
+      });
       return;
     }
 
     try {
       const response = await axios.post("/users", {
-        name: username.trim(),
-        role: role,
+        name: name.trim(),
+        role: role.toLowerCase(),
         password: password.trim(),
       });
-      if (response) {
-        const newUser = await response.data;
-        toast.success("User added successfully!");
-        console.log("User added successfully:", newUser);
+
+      if (response && response.data) {
+        const newUser = response.data;
+        toast.success("User added successfully!",{
+          autoClose: 500,
+        });
         navigate("/usersList");
       } else {
-        toast.error("error occured during th process");
-        console.log("error occured during th process");
+        throw new Error("Invalid response from server.");
       }
     } catch (error) {
-      if (error.response.status === 401) {
+      if (error.response?.status === 401) {
         setError("Unauthorized. Please log in again.");
-        toast.error("Unauthorized. Please log in again!");
-        navigate("/l");
-      } else if (error.response.status === 403) {
+        toast.error("Unauthorized. Please log in again!",{
+          autoClose: 500,
+        });
+        navigate("/login");
+      } else if (error.response?.status === 403) {
         setError("Access denied. Only admins can add new users.");
-        toast.error("Access denied. Only admins can add new users!");
+        toast.error("Access denied. Only admins can add new users!",{
+          autoClose: 500,
+        });
       } else {
         setError("An error occurred. Please try again later.");
-        toast.error("An error occurred. Please try again later!");
+        toast.error("An error occurred. Please try again later!",{
+          autoClose: 500,
+        });
       }
     }
   }
@@ -115,7 +140,7 @@ export default function Signup() {
       <ToastContainer />
       <form
         className="card p-4 shadow-sm"
-        style={{ width: "350px" }}
+        style={{ width: "400px" }}
         onSubmit={handleNewUser}
       >
         <div className="text-center mb-2">
@@ -128,9 +153,9 @@ export default function Signup() {
           <hr className="text-primary" />
         </div>
         <div className="mb-0">
-          <label className="form-label">Username</label>
+          <label className="form-label">Name</label>
           <div className="input-group mb-1">
-            <span className="input-group-text" id="username-addon">
+            <span className="input-group-text" id="name-addon">
               <img
                 src={usernameIcon}
                 alt="username"
@@ -140,11 +165,11 @@ export default function Signup() {
             <input
               type="text"
               className="form-control"
-              placeholder="Enter username"
-              name="username"
-              value={formData.username}
+              placeholder="Enter name"
+              name="name"
+              value={formData.name}
               onChange={handleChange}
-              aria-describedby="username-addon"
+              aria-describedby="name-addon"
             />
           </div>
           <div className="mb-1">
@@ -156,8 +181,8 @@ export default function Signup() {
               onChange={handleChange}
             >
               <option>Select</option>
-              <option value="Admin">Admin</option>
-              <option value="Normal">Normal</option>
+              <option value="admin">Admin</option>
+              <option value="normal">Normal</option>
             </select>
           </div>
           <div className="mb-2">
@@ -201,7 +226,7 @@ export default function Signup() {
             />
           </div>
         </div>
-        <div className="d-flex justify-content-between mt-4">
+        <div className="d-flex justify-content-end mt-4 gap-2">
           <button type="submit" className="btn btn-primary w-45">
             ADD
           </button>

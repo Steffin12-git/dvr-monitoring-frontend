@@ -11,15 +11,15 @@ import Addition from "../../../assets/icons/Addition-button.png";
 import update from "../../../assets/icons/edit.png";
 import deleteIcon from "../../../assets/icons/trash.png";
 import qr_code from "../../../assets/icons/qr-code.png";
-import Delete from "../../../Components/Delete/Delete";
-import Qrcode from "../Qrcode/Qrcode";
-import Download_file from "../Config_download/Download_file";
+import Delete from "../../../components/delete-ui/Delete";
+import Qrcode from "../qr-display/QrDisplay";
+import Download_file from "../config-dwnld/ConfigDownload";
 
 /**
  * Devices Component
  *
  * This component displays a list of devices fetched from the server and provides functionalities
- * to add, update, delete devices, generate QR codes and download config file for each device.
+ * to add, update, delete devices, generate QR codes, and download config files for each device.
  *
  * @component
  */
@@ -33,6 +33,13 @@ export default function Devices() {
   const [qrCodeVisible, setQrCodeVisible] = useState(false);
 
   useEffect(() => {
+    const loggedInUser = localStorage.getItem("loggedInUser");
+    if (loggedInUser) {
+      const parsedUser = JSON.parse(loggedInUser);
+      setAdminName(parsedUser.name || " ");
+      setUserRole(parsedUser.role || " ");
+    }
+
     async function fetchDevices() {
       try {
         const response = await axios.get("/devices");
@@ -41,13 +48,13 @@ export default function Devices() {
           throw new Error("Failed to fetch devices");
         }
 
-        const devicesData = await response.data;
+        const devicesData = response.data;
         setDevices(devicesData || []);
       } catch (err) {
         toast.error("Error fetching devices. Please try again.");
         console.error("Error fetching devices:", err);
 
-        if (err.message.includes("unauthorized")) {
+        if (err.response?.status === 401) {
           handleLogout();
         }
       }
@@ -72,7 +79,7 @@ export default function Devices() {
         try {
           const response = await axios.delete(`/devices/${selectedDeviceId}`);
 
-          if (response) {
+          if (response.status === 200) {
             setDevices(
               devices.filter((device) => device.id !== selectedDeviceId)
             );
@@ -103,18 +110,17 @@ export default function Devices() {
    */
   const handleLogout = async () => {
     try {
-      document.cookie = "user=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/";
+      const response = await axios.post("/auth/logout");
 
-      const response = await axios.post("/logout");
-
-      if (!response) {
-        toast.error("Error during logout");
-        navigate("/");
+      if (response) {
+        toast.success("Logged out successfully!");
+        localStorage.clear();
+        setTimeout(() => navigate("/"), 300);
+      } else {
+        localStorage.clear();
+        setTimeout(() => navigate("/"), 300);
         throw new Error("Failed to log out");
       }
-
-      toast.success("Logged out successfully!");
-      setTimeout(() => navigate("/"), 300);
     } catch (err) {
       console.error("Error during logout: ", err);
       toast.error("Failed to log out");
@@ -148,7 +154,7 @@ export default function Devices() {
         <ToastContainer />
         <div
           className="container py-4 border mt-2"
-          style={{ width: "95%", marginTop: "80vh", height: "80vh" }}
+          style={{ width: "95%", height: "80vh" }}
         >
           <div className="d-flex justify-content-between align-items-center border-bottom">
             <h3 className="d-flex align-items-center">
@@ -183,7 +189,12 @@ export default function Devices() {
           <div className="">
             <ul
               className="list-unstyled m-0"
-              style={{ maxHeight: "62vh", overflowY: "auto" }}
+              style={{
+                maxHeight: "60vh", 
+                overflowY: "auto", 
+                overflowX: "hidden", 
+                paddingRight: "10px", 
+              }}
             >
               {devices.map((device) => (
                 <li
@@ -208,7 +219,7 @@ export default function Devices() {
                       textAlign: "center",
                     }}
                   >
-                    <span>{device.latestHandshakeAt}</span>
+                    <span>{device.latestHandshakeAt || "N/A"}</span>
                   </div>
                   <div
                     style={{
@@ -220,11 +231,18 @@ export default function Devices() {
                       gap: "5px",
                     }}
                   >
-                    <Link to={`/devicesList/update/${device.id}`}>
+                    <Link
+                      to={`/devicesList/update/${device.id}`}
+                      state={{
+                        name: device.name,
+                        urlProfile: device.urlProfile,
+                        special: device.special,
+                      }}
+                    >
                       <img
                         src={update}
                         alt="update"
-                        style={{ width: "20px", height: "20px" }}
+                        style={{ width: "20px", height: "20px",marginBottom:"3px" }}
                       />
                     </Link>
                     <img

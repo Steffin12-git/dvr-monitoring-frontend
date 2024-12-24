@@ -39,7 +39,7 @@ export default function DeviceListUser() {
         const devicesData = await devicesResponse.data;
         setDevices(devicesData);
 
-        const profilesResponse = await axios.get("/urlProfiles");
+        const profilesResponse = await axios.get("/devices/urlProfiles");
 
         if (!profilesResponse) {
           throw new Error("Failed to fetch URL profiles.");
@@ -89,21 +89,16 @@ export default function DeviceListUser() {
    */
   const handleLogout = async () => {
     try {
-      document.cookie = "user=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/";
-
-      const response = await axios.post("/logout", {
-        method: "POST",
-        credentials: "include",
-      });
+      const response = await axios.post("/auth/logout");
 
       if (!response.ok) {
-        navigate("/");
+        toast.error("Failed to log out");
+        setTimeout(() => navigate("/"), 350);
         throw new Error("Failed to log out");
       }
-
       toast.success("Logged out successfully!");
-
-      setTimeout(() => navigate("/"), 400);
+      localStorage.clear();
+      setTimeout(() => navigate("/"), 350);
     } catch (err) {
       console.error("Error during logout: ", err);
       toast.error("Failed to log out");

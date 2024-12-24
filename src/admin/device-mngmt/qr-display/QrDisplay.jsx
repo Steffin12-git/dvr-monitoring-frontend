@@ -1,6 +1,4 @@
-/* eslint-disable react-hooks/exhaustive-deps */
-/* eslint-disable react/prop-types */
-/* eslint-disable no-unused-vars */
+/* eslint-disable react-hooks/exhaustive-deps, no-unused-vars, react/prop-types */
 import React, { useEffect, useState } from "react";
 import { toast } from "react-toastify";
 import axios from "../../../index";
@@ -31,18 +29,18 @@ export default function Qrcode({ visible, id, onClose }) {
    */
   async function fetchQRCode() {
     try {
-      const response = await axios.get(`/qrCode/${id}`);
-      if (response.status !== 200 || !response.data || !response.data.qrCode) {
+      const response = await axios.get(`/devices/${id}/qrcode`); 
+      if (response.status !== 200 || !response.data) {
         toast.error("Failed to fetch QR code");
         throw new Error("Failed to fetch QR code");
       }
-
-      setQrCodeData(response.data.qrCode);
+      setQrCodeData(response.data);
     } catch (err) {
       toast.error("An error occurred while fetching the QR code.");
       console.error("Error fetching QR code: ", err);
     }
   }
+  
 
   useEffect(() => {
     if (visible && id) {

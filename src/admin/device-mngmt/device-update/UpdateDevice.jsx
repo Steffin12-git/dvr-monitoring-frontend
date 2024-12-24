@@ -1,97 +1,74 @@
 /* eslint-disable no-unused-vars */
-import React, { useEffect, useState } from "react";
+import React, { useState, useEffect } from "react";
 import axios from "../../../index";
-import { useNavigate, useParams } from "react-router-dom";
+import { useNavigate, useParams, useLocation } from "react-router-dom";
 import update from "../../../assets/icons/edit.png";
 import username from "../../../assets/icons/monitoring-main-icon.png";
 import { toast, ToastContainer } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
 
 /**
  * UpdateDevice Component
  *
- * This component provides a form interface to update the details of a specific device.
- * It fetches URL profiles for selection and updates the device details on form submission.
- *
- * @component
- * @returns {JSX.Element} The UpdateDevice component
+ * Allows updating details of a specific device.
+ * Fetches URL profiles and preloads device data from the DeviceList component.
  */
-
 export default function UpdateDevice() {
   const navigate = useNavigate();
   const { id } = useParams();
+  const location = useLocation();
   const [device, setDevice] = useState({
-    name: "",
-    urlProfile: "",
-    special: false,
+    name: location.state?.name || "",
+    urlProfile: location.state?.urlProfile || "",
+    special: location.state?.special || false,
   });
   const [urlProfiles, setUrlProfiles] = useState([]);
   const [error, setError] = useState("");
 
-  /**
-   * Fetches the available URL profiles from the server.
-   * Updates the `urlProfiles` state with the retrieved data.
-   * Displays an error message if the fetch fails.
-   */
   useEffect(() => {
     async function fetchUrlProfiles() {
       try {
-        const response = await axios.get("/urlProfiles");
-        if (!response) {
-          toast.success("error fetching url profiles");
-        }
-
-        const data = await response.data;
-        console.log("Fetched URL Profiles Data:", data);
+        const response = await axios.get("/devices/urlProfiles");
+        const data = response?.data;
 
         if (Array.isArray(data)) {
           setUrlProfiles(data.map((profile) => profile.name));
         } else {
-          throw new Error("Data is not an array");
+          throw new Error("Invalid data format");
         }
       } catch (error) {
         console.error("Error fetching URL profiles:", error);
-        setError("Could not load URL profiles. Please try again later.");
+        toast.error("Failed to fetch URL profiles.");
       }
     }
 
     fetchUrlProfiles();
   }, []);
 
-  /**
-   * Handles form submission to update the device details.
-   * Sends the updated device information to the server.
-   * Redirects to the devices list on success or displays an error message on failure.
-   *
-   * @param {React.FormEvent} e - The form submit event
-   */
   async function handleSubmit(e) {
     e.preventDefault();
     setError("");
 
-    if (!device.name || !device.urlProfile === "Select") {
-      setError("All fields are required!");
+    if (!device.name || device.name.length < 4) {
+      toast.error("Device name must be at least 4 characters long.");
+      return;
+    }
+    if (!device.urlProfile) {
+      toast.error("Please select a URL profile.");
       return;
     }
 
     try {
-      const response = await axios.put(`/devices/${id}`, {
+      await axios.put(`/devices/${id}`, {
         name: device.name,
         urlProfile: device.urlProfile,
         special: device.special,
       });
-
-      if (response) {
-        toast.success(" device updated succesfully");
-        setTimeout(() => {
-          navigate("/devicesList");
-        }, 500);
-      } else {
-        setError("Failed to update device. Please try again later.");
-      }
+      toast.success("Device updated successfully.");
+      setTimeout(() => navigate("/devicesList"), 300);
     } catch (err) {
-      toast.error("An error occurred. Please try again!");
-      setError("An error occurred. Please try again!");
-      console.error(err);
+      console.error("Error updating device:", err);
+      toast.error("Failed to update device.");
     }
   }
 
@@ -139,12 +116,11 @@ export default function UpdateDevice() {
             }
           >
             <option value="">Select</option>
-            {Array.isArray(urlProfiles) &&
-              urlProfiles.map((profileName, index) => (
-                <option key={index} value={profileName}>
-                  {profileName}
-                </option>
-              ))}
+            {urlProfiles.map((profile, index) => (
+              <option key={index} value={profile}>
+                {profile}
+              </option>
+            ))}
           </select>
         </div>
 
@@ -154,23 +130,22 @@ export default function UpdateDevice() {
             className="form-check-input"
             id="specialCheck"
             checked={device.special}
-            onChange={() => setDevice({ ...device, special: !device.special })}
+            onChange={() =>
+              setDevice((prev) => ({ ...prev, special: !prev.special }))
+            }
           />
           <label className="form-check-label" htmlFor="specialCheck">
             Special
           </label>
         </div>
 
-        <div
-          className="d-flex justify-content-center"
-          style={{ gap: "70px", marginTop: "15%" }}
-        >
+        <div className="d-flex justify-content-end gap-2">
           <button type="submit" className="btn btn-primary">
             Update
           </button>
           <button
             type="button"
-            className="btn btn-secondary"
+            className="btn btn-secondary "
             onClick={() => navigate("/devicesList")}
           >
             Cancel
