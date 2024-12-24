@@ -22,18 +22,19 @@ export default function Download_file({ deviceID }) {
    */
   const handleDownload = async () => {
     try {
-      const response = await axios.get(`/configFile/${deviceID}`);
+      const response = await axios.get(`/devices/${deviceID}/configuration`, {
+        responseType: "blob",
+      });
 
       if (!response || response.status !== 200) {
         toast.error("Failed to download file from the server");
         throw new Error("Failed to download file from the server");
       }
 
-      const fileBlob = new Blob([response.data.configFileContent], {
-        type: "text/plain",
+      const fileBlob = new Blob([response.data], {
+        type: response.headers["content-type"] || "application/octet-stream",
       });
       const fileUrl = URL.createObjectURL(fileBlob);
-
       const fileName = `device-${deviceID}-config.txt`;
 
       const link = document.createElement("a");

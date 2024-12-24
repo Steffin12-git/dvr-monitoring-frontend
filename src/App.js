@@ -2,17 +2,17 @@
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 import "bootstrap/dist/css/bootstrap.css";
 import "react-toastify/dist/ReactToastify.css";
-import Login from "./Components/Login/Login";
-import ListUser from "./Admin/Users/ListUser/ListUser";
-import Update_user from "./Admin/Users/UpdateUser/Update_user";
-import Delete from "./Components/Delete/Delete";
-import Signup from "./Admin/Users/AddNewUser/Signup.jsx";
-import Devices from "./Admin/Devices_list/Devices/Devices.jsx";
-import UpdateDevice from "./Admin/Devices_list/Update_Device/UpdateDevice.jsx";
-import Add_Device from "./Admin/Devices_list/Device_Add/Add_Device.jsx";
-import DeviceListUser from "./Users/DeviceListUser.jsx";
-import Download_file from "./Admin/Devices_list/Config_download/Download_file.jsx";
-import Qrcode from "./Admin/Devices_list/Qrcode/Qrcode.jsx";
+import Login from "./components/login-ui/Login";
+import ListUser from "./admin/user-mngmt/user-list/ListUser.jsx";
+import Update_user from "./admin/user-mngmt/user-update/UpdateUser.jsx";
+import Delete from "./components/delete-ui/Delete.jsx";
+import Signup from "./admin/user-mngmt/user-create/CreateUsers.jsx";
+import Devices from "./admin/device-mngmt/device-list/DeviceList.jsx";
+import UpdateDevice from "./admin/device-mngmt/device-update/UpdateDevice.jsx";
+import Add_Device from "./admin/device-mngmt/device-add/AddDevices.jsx";
+import DeviceListUser from "./normal-users/ListDevice.jsx";
+import Download_file from "./admin/device-mngmt/config-dwnld/ConfigDownload.jsx";
+import Qrcode from "./admin/device-mngmt/qr-display/QrDisplay.jsx";
 
 function App() {
   return (

@@ -1,24 +1,24 @@
 /* eslint-disable no-unused-vars */
 import React, { useState } from "react";
+import { useLocation, useNavigate, useParams } from "react-router-dom";
 import axios from "../../../index";
 import { ToastContainer, toast } from "react-toastify";
-import { useNavigate, useParams } from "react-router-dom";
 import usernameIcon from "../../../assets/icons/username.png";
 import passwordIcon from "../../../assets/icons/password.png";
 import addNewUserIcon from "../../../assets/icons/update_user.png";
 
 /**
  * Update_user Component
- * A React component that provides a form to edit user details. It allows an admin to update an existing user's name, role, and password.
- *
- * @component
+ * A React component to edit user details.
  */
 export default function Update_user() {
   const navigate = useNavigate();
   const { id } = useParams();
+  const location = useLocation();
+
   const [user, setUser] = useState({
-    name: "",
-    role: "",
+    name: location.state?.name || "", 
+    role: location.state?.role || "", 
     password: "",
   });
   const [error, setError] = useState("");
@@ -31,32 +31,52 @@ export default function Update_user() {
   async function handleSubmit(e) {
     e.preventDefault();
     setError("");
-
-    if (!user.name || user.role === "Select" || !user.password) {
-      toast.error("All fields are required!");
+  
+    const { name, role, password } = user;
+  
+    if (!name || !role) {
+      toast.error("Name and Role are required!");
       return;
     }
-
+  
+    if (name.length < 4) {
+      toast.error("Name must be at least 4 characters long!");
+      return;
+    }
+  
+    const validRoles = ["normal", "admin"];
+    if (!validRoles.includes(role.toLowerCase())) {
+      toast.error("Invalid role selected!");
+      return;
+    }
+  
     try {
-      const response = await axios.put(`/users/${id}`, {
-        name: user.name,
-        role: user.role,
-        password: user.password,
-      });
-
-      if (response) {
-        toast.success("User updates successfully!");
+      const updatedData = {
+        name: name.trim(),
+        role: role.toLowerCase(),
+      };
+  
+      if (password.trim()) {
+        if (password.length < 8) {
+          toast.error("Password must be at least 8 characters long!");
+          return;
+        }
+        updatedData.password = password.trim();
+      }
+  
+      const response = await axios.put(`/users/${id}`, updatedData);
+  
+      if (response && response.data) {
+        toast.success("User updated successfully!");
         setTimeout(() => {
           navigate("/usersList");
-        }, 500);
+        }, 600);
       } else {
         setError("Failed to update user. Please try again later.");
         toast.error("Failed to update user. Please try again later.");
       }
     } catch (err) {
-      setError("An error occurred. Please try again!");
       toast.error("An error occurred. Please try again!");
-      console.error(err);
     }
   }
 
@@ -98,7 +118,6 @@ export default function Update_user() {
           </div>
         </div>
 
-        {/* Role Field */}
         <div className="mb-1">
           <label className="form-label">Role</label>
           <select
@@ -106,14 +125,14 @@ export default function Update_user() {
             value={user.role}
             onChange={(e) => setUser({ ...user, role: e.target.value })}
           >
-            <option>Select</option>
+            <option value="">Select</option>
             <option value="admin">Admin</option>
             <option value="normal">Normal</option>
           </select>
         </div>
 
         <div className="mb-5">
-          <label className="form-label">Password</label>
+          <label className="form-label">Password (Optional)</label>
           <div className="input-group">
             <span className="input-group-text">
               <img
@@ -125,19 +144,17 @@ export default function Update_user() {
             <input
               type="password"
               className="form-control"
-              placeholder="Enter password"
+              placeholder="Enter new password"
               value={user.password}
               onChange={(e) => setUser({ ...user, password: e.target.value })}
             />
           </div>
         </div>
 
-        {/* Error Message */}
         {error && <div className="alert alert-danger text-center">{error}</div>}
 
-        {/* Buttons */}
-        <div className="d-flex justify-content-center " style={{ gap: "40px" }}>
-          <button type="submit" className="btn btn-primary w-45">
+        <div className="d-flex justify-content-end gap-2">
+          <button type="submit" className="btn btn-primary">
             Update
           </button>
           <button

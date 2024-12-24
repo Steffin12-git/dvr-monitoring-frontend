@@ -10,7 +10,7 @@ import logoutIcon from "../../../assets/icons/logout.png";
 import addIcon from "../../../assets/icons/Addition-button.png";
 import updateIcon from "../../../assets/icons/edit.png";
 import deleteIcon from "../../../assets/icons/trash.png";
-import Delete from "../../../Components/Delete/Delete";
+import Delete from "../../../components/delete-ui/Delete";
 
 /**
  * ListUser Component
@@ -30,12 +30,17 @@ export default function ListUser() {
   const [userRole, setUserRole] = useState("");
 
   useEffect(() => {
+    const loggedInUser = localStorage.getItem("loggedInUser");
+    if (loggedInUser) {
+      const parsedUser = JSON.parse(loggedInUser);
+      setAdminName(parsedUser.name || "");
+      setUserRole(parsedUser.role || "");
+    }
+
     const fetchUsers = async () => {
       try {
-        const response = await axios.get("/users");
-
-        const userData = await response.data;
-        setUsers(userData || []);
+        const response = await axios.get("/users"); 
+        setUsers(response.data || []);
       } catch (err) {
         console.error("Error fetching users", err);
         toast.error("Failed to fetch users");
@@ -49,7 +54,7 @@ export default function ListUser() {
    * Handles the delete user actions.
    *
    * @param {string} action - The type of delete action to perform ('show', 'confirm', 'cancel').
-   * @param {number} [id] - The ID of the user to delete (required if action is 'show' or 'confirm').
+   * @param {string} [id] - The ID of the user to delete (required if action is 'show' or 'confirm').
    */
   const handleDeleteAction = async (action, id = null) => {
     switch (action) {
@@ -60,13 +65,12 @@ export default function ListUser() {
 
       case "confirm":
         try {
-          const response = await axios.delete(`/users/${selectedUserId}`);
-
-          setUsers(users.filter((user) => user.id !== selectedUserId));
-          if (!response) {
-            toast.error("Failed to delete user");
-          } else {
+          const response = await axios.delete(`/users/${selectedUserId}`); 
+          if (response.status === 200) {
+            setUsers(users.filter((user) => user.id !== selectedUserId));
             toast.success("User deleted successfully");
+          } else {
+            toast.error("Failed to delete user");
           }
         } catch (err) {
           console.error("Error deleting user: ", err);
@@ -89,12 +93,15 @@ export default function ListUser() {
 
   const handleLogout = async () => {
     try {
-      const response = await axios.post("/logout");
-
+      const response = await axios.post("/auth/logout"); 
       if (response) {
         toast.success("Logged out successfully!");
+        localStorage.clear();
         setTimeout(() => navigate("/"), 300);
       } else {
+        localStorage.clear();
+        setTimeout(() => navigate("/"), 300);
+        toast.error("Failed to log out!");
         throw new Error("Failed to log out");
       }
     } catch (err) {
@@ -132,7 +139,7 @@ export default function ListUser() {
             width: "95%",
             height: "80vh",
             maxWidth: "100%",
-            overflowX: "hidden",
+            overflowX: "auto",
           }}
         >
           <div className="d-flex justify-content-between align-items-center border-bottom">
@@ -162,10 +169,11 @@ export default function ListUser() {
           <ul
             className="list-unstyled m-0"
             style={{
-              maxHeight: "62vh",
-              overflowY: "auto",
-            }}
-          >
+              maxHeight: "60vh", 
+              overflowY: "auto", 
+              overflowX: "hidden", 
+              paddingRight: "10px", 
+            }}          >
             {users.map((user) => (
               <li
                 key={user.id}
@@ -201,7 +209,10 @@ export default function ListUser() {
                     textAlign: "right",
                   }}
                 >
-                  <Link to={`/usersList/update/${user.id}`}>
+                  <Link
+                    to={`/usersList/update/${user.id}`}
+                    state={{ name: user.name, role: user.role }} 
+                  >
                     <img
                       src={updateIcon}
                       alt="update"
