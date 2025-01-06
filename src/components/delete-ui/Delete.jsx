@@ -1,31 +1,56 @@
 /* eslint-disable no-unused-vars, react/prop-types */
 import React from "react";
+import { Modal, Box, Typography, Button } from "@mui/material";
 
+/**
+ * Delete Component
+ *
+ * @param {Object} props - Component properties.
+ * @param {string} props.title - The title of the delete confirmation dialog.
+ * @param {string} props.description - The description or message in the dialog.
+ * @param {boolean} props.visible - Determines if the modal is visible.
+ * @param {Function} props.onConfirm - Callback function executed on confirmation.
+ * @param {Function} props.onCancel - Callback function executed on cancellation.
+ * @returns {JSX.Element|null} A responsive modal for delete confirmation.
+ */
 export default function Delete({ title, description, visible, onConfirm, onCancel }) {
-  if (!visible) return null;
-
   return (
-    <div className="position-fixed top-0 start-0 w-100 h-100 bg-dark bg-opacity-50 d-flex justify-content-center align-items-center zindex-1050">
-      <div className="bg-white w-50 max-w-500px p-4 rounded shadow">
-        <div className="d-flex flex-column gap-3 text-center">
-          <h2 className="h4">{title}</h2>
-          <p>{description}</p>
-          <div className="d-flex justify-content-center gap-3">
-            <button
-              className="btn btn-primary px-4 py-2 rounded"
-              onClick={onConfirm}
-            >
-              Yes
-            </button>
-            <button
-              className="btn btn-secondary px-4 py-2 rounded"
-              onClick={onCancel}
-            >
-              No
-            </button>
-          </div>
-        </div>
-      </div>
-    </div>
+    <Modal
+      open={visible}
+      onClose={onCancel}
+      aria-labelledby="delete-modal-title"
+      aria-describedby="delete-modal-description"
+    >
+      <Box
+        sx={{
+          position: "absolute",
+          top: "50%",
+          left: "50%",
+          transform: "translate(-50%, -50%)",
+          width: "90%",
+          maxWidth: 500,
+          bgcolor: "background.paper",
+          borderRadius: 2,
+          boxShadow: 24,
+          p: 4,
+          textAlign: "center",
+        }}
+      >
+        <Typography id="delete-modal-title" variant="h6" component="h2" mb={2}>
+          {title}
+        </Typography>
+        <Typography id="delete-modal-description" variant="body1" mb={3}>
+          {description}
+        </Typography>
+        <Box display="flex" justifyContent="center" gap={2}>
+          <Button variant="contained" color="primary" onClick={onConfirm}>
+            Yes
+          </Button>
+          <Button variant="outlined" color="secondary" onClick={onCancel}>
+            No
+          </Button>
+        </Box>
+      </Box>
+    </Modal>
   );
 }

@@ -4,6 +4,11 @@ import './index.css';
 import axios from 'axios';
 import App from './App';
 import reportWebVitals from './reportWebVitals';
+import '@fontsource/roboto/300.css';
+import '@fontsource/roboto/400.css';
+import '@fontsource/roboto/500.css';
+import '@fontsource/roboto/700.css';
+
 
 const baseURL = process.env.REACT_APP_API_URL;
 if (!baseURL) {

@@ -1,51 +1,72 @@
-/* eslint-disable no-unused-vars */
 import React, { useEffect, useState } from "react";
-import { toast, ToastContainer } from "react-toastify";
 import { useNavigate } from "react-router-dom";
+import { extendTheme, ThemeProvider, styled } from "@mui/material/styles";
+import { ToastContainer, toast } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
+import ManageAccountsIcon from "@mui/icons-material/ManageAccounts";
+import {
+  Box,
+  IconButton,
+  Menu,
+  MenuItem,
+  Table,
+  TableBody,
+  TableCell,
+  TableContainer,
+  TableHead,
+  TableRow,
+  Typography,
+} from "@mui/material";
 import axios from "../index";
-import logoutIcon from "../assets/icons/logout.png";
-import mainLogo from "../assets/icons/Main_logo.png";
-import monitorIcon from "../assets/icons/monitoring-main-icon.png";
+import main_logo from "../assets/icons/Main_logo.png";
 
-/**
- * A React component that displays a list of devices grouped by URL profiles.
- *
- * @component
- * @example
- * <DeviceListUser />
- *
- * @returns {JSX.Element} The rendered component.
- */
+const demoTheme = extendTheme({
+  breakpoints: {
+    values: {
+      xs: 0,
+      sm: 600,
+      md: 900,
+      lg: 1200,
+      xl: 1536,
+    },
+  },
+  palette: {
+    background: {
+      paper: "#fff",
+    },
+    text: {
+      primary: "#173A5E",
+      secondary: "#46505A",
+    },
+    action: {
+      active: "#001E3C",
+    },
+    success: {
+      dark: "#009688",
+    },
+  },
+});
+
+const StyledTableCell = styled(TableCell)(({ theme }) => ({
+  padding: theme.spacing(2),
+  textAlign: "center",
+  minWidth: 150,
+}));
+
 export default function DeviceListUser() {
   const navigate = useNavigate();
-  const [devices, setDevices] = useState([]);
   const [urlProfiles, setUrlProfiles] = useState([]);
+  const [anchorEl, setAnchorEl] = useState(null);
+  const open = Boolean(anchorEl);
 
-  /**
-   * Fetches the list of devices and URL profiles from the axios.
-   *
-   * @async
-   * @function fetchData
-   * @throws {Error} If the fetch requests fail.
-   */
   useEffect(() => {
     async function fetchData() {
       try {
-        const devicesResponse = await axios.get("/devices");
-
-        if (!devicesResponse) {
-          throw new Error("Failed to fetch devices.");
-        }
-        const devicesData = await devicesResponse.data;
-        setDevices(devicesData);
-
         const profilesResponse = await axios.get("/devices/urlProfiles");
+        const profilesData = profilesResponse.data;
 
-        if (!profilesResponse) {
-          throw new Error("Failed to fetch URL profiles.");
-        }
-
-        const profilesData = await profilesResponse.data;
+        const devicesResponse = await axios.get("/devices");
+        const devicesData = devicesResponse.data;
 
         const profileMapping = profilesData.map((profile) => {
           const relatedDevices = devicesData.filter(
@@ -73,99 +94,133 @@ export default function DeviceListUser() {
         setUrlProfiles(profileMapping);
       } catch (err) {
         toast.error("Error fetching data. Please try again.");
-        console.error("Fetch error:", err);
       }
     }
 
     fetchData();
   }, []);
 
-  /**
-   * Handles the user logout operation.
-   *
-   * @function handleLogout
-   * @async
-   * @throws {Error} If the logout operation fails.
-   */
   const handleLogout = async () => {
     try {
-      const response = await axios.post("/auth/logout");
-
-      if (!response.ok) {
-        toast.error("Failed to log out");
-        setTimeout(() => navigate("/"), 350);
-        throw new Error("Failed to log out");
-      }
+      await axios.post("/auth/logout");
       toast.success("Logged out successfully!");
       localStorage.clear();
       setTimeout(() => navigate("/"), 350);
     } catch (err) {
-      console.error("Error during logout: ", err);
       toast.error("Failed to log out");
     }
   };
 
-  return (
-    <div className="row mx-0 vh-100 overflow-hidden">
-      <div className="container-fluid d-flex flex-column h-100">
-        <ToastContainer />
-        <header className="header d-flex justify-content-between align-items-center px-5 py-2 border-bottom mt-3">
-          <img
-            src={mainLogo}
-            alt="Main Logo"
-            className="img-fluid"
-            style={{ maxWidth: "70px" }}
-          />
-          <button
-            className="btn btn-link d-flex align-items-center text-dark text-decoration-none"
-            onClick={handleLogout}
-          >
-            <span className="d-none d-md-block fs-5">Logout</span>
-            <img
-              src={logoutIcon}
-              alt="Logout"
-              className="ms-2"
-              style={{ width: "20px", height: "20px" }}
-            />
-          </button>
-        </header>
+  const handleMenuClick = (event) => {
+    setAnchorEl(event.currentTarget);
+  };
 
-        <main className="flex-grow-1 container py-4 mt-2">
-          <div>
-            <h3 className="text-center text-md-start">
-              <img
-                src={monitorIcon}
-                alt="Monitor"
-                className="me-2"
-                style={{ height: "25px" }}
-              />
-              Devices
-            </h3>
-            <hr className="border-bottom mb-4" />
-            <div
-              className="table-responsive"
-              style={{
-                maxHeight: "400px",
-                overflowY: "auto",
+  const handleMenuClose = () => {
+    setAnchorEl(null);
+  };
+
+  return (
+    <ThemeProvider theme={demoTheme}>
+      <Box
+        sx={{
+          display: "flex",
+          flexDirection: "column",
+          alignItems: "center",
+          minHeight: "100vh",
+          backgroundColor: "#E0E0E0",
+          padding: { xs: 1, sm: 3, md: 4 },
+        }}
+      >
+        {/* Navbar */}
+        <Box
+          sx={{
+            display: "flex",
+            flexWrap: "wrap",
+            alignItems: "center",
+            justifyContent: "space-between",
+            padding: { xs: 1, sm: 2 },
+            backgroundColor: demoTheme.palette.background.paper,
+            width: "100%",
+            position: "fixed",
+            top: 0,
+            left: 0,
+            zIndex: 10,
+          }}
+        >
+          <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+            <img
+              src={main_logo}
+              alt="My_Logo"
+              style={{ height: 40, marginLeft: 10 }}
+            />
+            <Typography
+              variant="h6"
+              sx={{
+                fontWeight: "bold",
+                color: demoTheme.palette.primary.dark,
+                fontSize: { xs: 14, sm: 18 },
               }}
             >
-              <table className="table border-none">
-                <tbody>
-                  {urlProfiles.map((profile) =>
-                    (profile.groupedDevices || []).map((group, index) => (
-                      <tr key={`${profile.profileName}-${index}`}>
-                        <td>{profile.profileName}</td>
-                        <td>{group.time}</td>
-                        <td>{group.devices.join(", ")}</td>
-                      </tr>
-                    ))
-                  )}
-                </tbody>
-              </table>
-            </div>
-          </div>
-        </main>
-      </div>
-    </div>
+              Monitoring
+            </Typography>
+          </Box>
+          <IconButton onClick={handleMenuClick}>
+            <ManageAccountsIcon sx={{ fontSize: 30 }} />
+          </IconButton>
+          <Menu anchorEl={anchorEl} open={open} onClose={handleMenuClose}>
+            <MenuItem onClick={handleLogout}>Logout</MenuItem>
+          </Menu>
+        </Box>
+
+        {/* Main Content */}
+        <Box
+          sx={{
+            display: "flex",
+            flexDirection: "column",
+            flexGrow: 1,
+            overflow: "auto",
+            backgroundColor: "#fff",
+            padding: { xs: 1, sm: 2, md: 3 },
+            borderRadius: 4,
+            boxShadow: 20,
+            marginTop: { xs: 8, sm: 9 },
+            width: "100%",
+            minHeight: "calc(70vh - 130px)",
+          }}
+        >
+          <ToastContainer />
+          <TableContainer
+            sx={{
+              maxHeight: "70vh",
+              overflowY: "auto",
+              width: "100%",
+            }}
+          >
+            <Table>
+              <TableHead>
+                <TableRow>
+                  <StyledTableCell>Profile Name</StyledTableCell>
+                  <StyledTableCell>Last Seen</StyledTableCell>
+                  <StyledTableCell>Devices</StyledTableCell>
+                </TableRow>
+              </TableHead>
+              <TableBody>
+                {urlProfiles.map((profile) =>
+                  (profile.groupedDevices || []).map((group, index) => (
+                    <TableRow key={`${profile.profileName}-${index}`}>
+                      <StyledTableCell>{profile.profileName}</StyledTableCell>
+                      <StyledTableCell>{group.time}</StyledTableCell>
+                      <StyledTableCell>
+                        {group.devices.join(" ")}
+                      </StyledTableCell>
+                    </TableRow>
+                  ))
+                )}
+              </TableBody>
+            </Table>
+          </TableContainer>
+        </Box>
+      </Box>
+    </ThemeProvider>
   );
 }

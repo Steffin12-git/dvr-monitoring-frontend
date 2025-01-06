@@ -5,37 +5,3 @@
   box-sizing: border-box;
 }
 /* ----------------------------------------------------------------------------------------- */
-/* sidebar.jsx */
-@media (max-width: 990px){
-  .main-sidebar{
-      width: 20vw;
-  }
-}
-@media (max-width: 800px){
-  .main-sidebar{
-      width: 20vw;
-  }
-}
-/* ------------------------------------------------------------------------------------------- */
-/* listUser.jsx */
-/* @media (max-width: 991px) {
-  .main-listUser {
-    margin-left: 100% !important;
-    margin-right: 0 !important;
-  }
-} */
-
-@media (max-width: 992px) {
-  .main-listUser {
-    margin-left: 100%;
-    margin-right: 0%;
-  }
-
-  .col-md-9.col-lg-10 {
-    width: 100%;
-    margin-left: 0;
-  }
-}
-
-
-

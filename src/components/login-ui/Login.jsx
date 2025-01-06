@@ -1,11 +1,18 @@
-/* eslint-disable no-unused-vars */
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { toast, ToastContainer } from "react-toastify";
 import axios from "../../index";
+import {
+  TextField,
+  Button,
+  Box,
+  InputAdornment,
+  Typography,
+  Grid2,
+} from "@mui/material";
 import usernames from "../../assets/icons/username.png";
 import passwords from "../../assets/icons/password.png";
-import addNewUser from "../../assets/icons/add-user-icon.png";
+import addNewUser from "../../assets/icons/loginpng.png";
 
 /**
  * Login Component
@@ -51,7 +58,7 @@ export default function Login() {
       // Assuming response.data is a single user object
       const user = response.data;
 
-      if (user && user.name === username && user.role && user.id) {
+      if (user && user.username === username && user.role && user.id) {
         // Store user data in localStorage and navigate based on role
         localStorage.setItem("loggedInUser", JSON.stringify(user));
         toast.success("Login successful!");
@@ -88,87 +95,109 @@ export default function Login() {
   }
 
   return (
-    <div className="d-flex justify-content-center align-items-center vh-100 bg-light">
+    <Grid2 
+    container
+    justifyContent="center"
+    alignItems="center"
+    sx={{ minHeight: "100vh", bgcolor: "#e0e0e0" }}>
       <ToastContainer />
-      <form className="bg-white p-5 rounded shadow-sm" onSubmit={handleLogin}>
-        <div className="text-center mb-4">
-          <img
-            src={addNewUser}
-            alt="Login Icon"
-            className="mb-1"
-            style={{ width: "50px", height: "50px" }}
-          />
-          <h2 className="fw-bold text-dark">Login</h2>
-          <div
-            className="bg-primary mt-2"
-            style={{ height: "2px", marginBottom: "15%" }}
-          ></div>
-        </div>
-        <div className="mb-3">
-          <label htmlFor="username" className="form-label">
-            Username
-          </label>
-          <div className="position-relative mb-4">
+      <Box
+        component="form"
+        sx={{
+          width: 400,
+          padding: 4,
+          borderRadius: 5,
+          boxShadow: 10,
+          backgroundColor: "#ffffff",
+        }}
+        onSubmit={handleLogin}
+      >
+        <Grid2 container direction="column" alignItems="center">
+          <Grid2 item>
             <img
-              src={usernames}
-              alt="username"
-              className="position-absolute top-50 start-0 translate-middle-y ms-3"
-              style={{ width: "20px", height: "20px" }}
+              src={addNewUser}
+              alt="Login Icon"
+              className="mb-3"
+              sx={{ maxWidth: "10px", maxHeight: "10px" }}
             />
-            <input
-              id="username"
-              type="text"
-              className="form-control ps-5"
+          </Grid2>
+          <Grid2 item>
+            <Typography variant="h5" component="h2" gutterBottom>
+              Login
+            </Typography>
+          </Grid2>
+          <Grid2 item xs={12} mb={2}>
+            <TextField
+              label="Username"
+              variant="outlined"
+              fullWidth
               value={username}
               onChange={(e) => setUsername(e.target.value)}
-              placeholder="Enter username"
+              placeholder="Enter your username"
               autoComplete="username"
               required
+              InputProps={{
+                startAdornment: (
+                  <InputAdornment position="start">
+                    <img
+                      src={usernames}
+                      alt="username"
+                      style={{ maxWidth: "20px", maxHeight: "20px" }}
+                    />
+                  </InputAdornment>
+                ),
+              }}
             />
-          </div>
-        </div>
-        <div className="mb-5">
-          <label htmlFor="password" className="form-label">
-            Password
-          </label>
-          <div className="position-relative">
-            <img
-              src={passwords}
-              alt="password"
-              className="position-absolute top-50 start-0 translate-middle-y ms-3"
-              style={{ width: "20px", height: "20px" }}
-            />
-            <input
-              id="password"
+          </Grid2>
+          <Grid2 item md={12} mb={3}>
+            <TextField
+              label="Password"
+              variant="outlined"
               type="password"
-              className="form-control ps-5"
+              fullWidth
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              placeholder="Enter password"
+              placeholder="Enter your password"
               autoComplete="current-password"
               required
+              InputProps={{
+                startAdornment: (
+                  <InputAdornment position="start">
+                    <img
+                      src={passwords}
+                      alt="password"
+                      style={{ maxWidth: "20px", maxHeight: "20px" }}
+                    />
+                  </InputAdornment>
+                ),
+              }}
             />
-          </div>
-        </div>
-        <div className="d-flex justify-content-evenly gap-3 mt-4">
-          <button
-            type="submit"
-            className="btn btn-primary w-48"
-            style={{ cursor: "pointer" }}
-            disabled={!username || !password}
-          >
-            Login
-          </button>
-          <button
-            type="button"
-            className="btn btn-secondary w-48"
-            style={{ cursor: "pointer" }}
-            onClick={handleCancel}
-          >
-            Cancel
-          </button>
-        </div>
-      </form>
-    </div>
+          </Grid2>
+          <Grid2 item container justifyContent="space-between" spacing={2}>
+            <Grid2 item>
+              <Button
+                type="submit"
+                variant="contained"
+                color="primary"
+                fullWidth
+                disabled={!username || !password}
+              >
+                Login
+              </Button>
+            </Grid2>
+            <Grid2 item>
+              <Button
+                variant="outlined"
+                color="secondary"
+                fullWidth
+                onClick={handleCancel}
+              >
+                Cancel
+              </Button>
+            </Grid2>
+          </Grid2>
+        </Grid2>
+      </Box>
+    </Grid2>
   );
 }

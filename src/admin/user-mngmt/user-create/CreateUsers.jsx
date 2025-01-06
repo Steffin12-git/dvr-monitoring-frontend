@@ -3,14 +3,15 @@ import React, { useState } from "react";
 import axios from "../../../index";
 import usernameIcon from "../../../assets/icons/username.png";
 import passwordIcon from "../../../assets/icons/password.png";
-import addNewUserIcon from "../../../assets/icons/add-user-icon.png";
+import addNewUserIcon from "../../../assets/icons/add-user-2-icon.png";
 import { useNavigate } from "react-router-dom";
 import { toast, ToastContainer } from "react-toastify";
+import { TextField, Button, Box, InputAdornment, Typography, Grid2, MenuItem } from "@mui/material";
 
 /**
  * Signup Component
  *
- * Provides a user interface for admins to add new users by providing their name, role, and password details.
+ * Provides a user interface for admins to add new users by providing their username, role, and password details.
  * Utilizes form inputs and validates user input before sending it to the server.
  *
  * @component
@@ -19,7 +20,7 @@ import { toast, ToastContainer } from "react-toastify";
 export default function Signup() {
   const navigate = useNavigate();
   const [formData, setFormData] = useState({
-    name: "",
+    username: "",
     role: "Select",
     password: "",
     confirmPassword: "",
@@ -48,19 +49,19 @@ export default function Signup() {
     e.preventDefault();
     setError("");
 
-    const { name, role, password, confirmPassword } = formData;
+    const { username, role, password, confirmPassword } = formData;
 
-    if (!name || role === "Select" ) {
+    if (!username || role === "Select") {
       setError("All fields are required.");
-      toast.error("name and role are required!",{
+      toast.error("Username and role are required!", {
         autoClose: 500,
       });
       return;
     }
 
-    if (name.length < 4) {
-      setError("Name must be at least 4 characters.");
-      toast.error("Name must be at least 4 characters!",{
+    if (username.length < 4) {
+      setError("Username must be at least 4 characters.");
+      toast.error("Username must be at least 4 characters!", {
         autoClose: 500,
       });
       return;
@@ -68,7 +69,7 @@ export default function Signup() {
 
     if (password.length < 8) {
       setError("Password must be at least 8 characters.");
-      toast.error("Password must be at least 8 characters!",{
+      toast.error("Password must be at least 8 characters!", {
         autoClose: 500,
       });
       return;
@@ -76,7 +77,7 @@ export default function Signup() {
 
     if (password !== confirmPassword) {
       setError("Passwords do not match.");
-      toast.error("Passwords do not match!",{
+      toast.error("Passwords do not match!", {
         autoClose: 500,
       });
       return;
@@ -85,7 +86,7 @@ export default function Signup() {
     const validRoles = ["normal", "admin"];
     if (!validRoles.includes(role.toLowerCase())) {
       setError("Invalid role selected.");
-      toast.error("Invalid role selected!",{
+      toast.error("Invalid role selected!", {
         autoClose: 500,
       });
       return;
@@ -93,14 +94,13 @@ export default function Signup() {
 
     try {
       const response = await axios.post("/users", {
-        name: name.trim(),
+        username: username.trim(),
         role: role.toLowerCase(),
         password: password.trim(),
       });
 
       if (response && response.data) {
-        const newUser = response.data;
-        toast.success("User added successfully!",{
+        toast.success("User added successfully!", {
           autoClose: 500,
         });
         navigate("/usersList");
@@ -110,19 +110,19 @@ export default function Signup() {
     } catch (error) {
       if (error.response?.status === 401) {
         setError("Unauthorized. Please log in again.");
-        toast.error("Unauthorized. Please log in again!",{
-          autoClose: 500,
+        toast.error("Unauthorized. Please log in again!", {
+          autoClose: 800,
         });
         navigate("/login");
       } else if (error.response?.status === 403) {
         setError("Access denied. Only admins can add new users.");
-        toast.error("Access denied. Only admins can add new users!",{
-          autoClose: 500,
+        toast.error("Access denied. Only admins can add new users!", {
+          autoClose: 800,
         });
       } else {
         setError("An error occurred. Please try again later.");
-        toast.error("An error occurred. Please try again later!",{
-          autoClose: 500,
+        toast.error("An error occurred. Please try again later!", {
+          autoClose: 800,
         });
       }
     }
@@ -136,109 +136,153 @@ export default function Signup() {
   }
 
   return (
-    <div className="container d-flex justify-content-center align-items-center vh-100">
+    <Grid2
+      container
+      justifyContent="center"
+      alignItems="center"
+      sx={{ minHeight: "100vh", bgcolor: "#e0e0e0" }}
+    >
       <ToastContainer />
-      <form
-        className="card p-4 shadow-sm"
-        style={{ width: "400px" }}
+      <Box
+        component="form"
+        sx={{
+          width: 400,
+          padding: 4,
+          borderRadius: 5,
+          boxShadow: 10,
+          backgroundColor: "#ffffff",
+        }}
         onSubmit={handleNewUser}
       >
-        <div className="text-center mb-2">
-          <img
-            src={addNewUserIcon}
-            alt="icon"
-            style={{ width: "40px", height: "40px" }}
-          />
-          <h4 className="mt-2">Add New User</h4>
-          <hr className="text-primary" />
-        </div>
-        <div className="mb-0">
-          <label className="form-label">Name</label>
-          <div className="input-group mb-1">
-            <span className="input-group-text" id="name-addon">
-              <img
-                src={usernameIcon}
-                alt="username"
-                style={{ width: "20px", height: "20px" }}
-              />
-            </span>
-            <input
-              type="text"
-              className="form-control"
-              placeholder="Enter name"
-              name="name"
-              value={formData.name}
-              onChange={handleChange}
-              aria-describedby="name-addon"
+        <Grid2 container direction="column" alignItems="center">
+          <Grid2 item>
+            <img
+              src={addNewUserIcon}
+              alt="Add New User Icon"
+              className="mb-3"
+              sx={{ maxWidth: "50px", maxHeight: "50px" }}
             />
-          </div>
-          <div className="mb-1">
-            <label className="form-label">Role</label>
-            <select
-              className="form-select"
+          </Grid2>
+          <Grid2 item>
+            <Typography variant="h5" component="h2" gutterBottom>
+              Add New User
+            </Typography>
+          </Grid2>
+          <Grid2 item xs={12} mb={2}>
+            <TextField
+              label="Username"
+              variant="outlined"
+              fullWidth
+              value={formData.username}
+              onChange={handleChange}
+              name="username"
+              placeholder="Enter your username"
+              required
+              InputProps={{
+                startAdornment: (
+                  <InputAdornment position="start">
+                    <img
+                      src={usernameIcon}
+                      alt="username"
+                      style={{ maxWidth: "20px", maxHeight: "20px" }}
+                    />
+                  </InputAdornment>
+                ),
+              }}
+            />
+          </Grid2>
+          <Grid2 item xs={12} mb={2}>
+            <TextField
+              label="Role"
+              variant="outlined"
+              fullWidth
+              select  
+              sx={{width :240}}
               name="role"
               value={formData.role}
               onChange={handleChange}
+              SelectProps={{
+                native: true,
+              }}
+              required
             >
-              <option>Select</option>
+              <option value="Select">Select</option>
               <option value="admin">Admin</option>
               <option value="normal">Normal</option>
-            </select>
-          </div>
-          <div className="mb-2">
-            <label className="form-label">Password</label>
-            <div className="input-group mb-0">
-              <span className="input-group-text" id="password-addon">
-                <img
-                  src={passwordIcon}
-                  alt="password"
-                  style={{ width: "20px", height: "20px" }}
-                />
-              </span>
-              <input
-                type="password"
-                className="form-control"
-                placeholder="Enter password"
-                name="password"
-                value={formData.password}
-                onChange={handleChange}
-                aria-describedby="password-addon"
-              />
-            </div>
-          </div>
-          <label className="form-label">Confirm Password</label>
-          <div className="input-group mb-3">
-            <span className="input-group-text" id="confirm-password-addon">
-              <img
-                src={passwordIcon}
-                alt="confirmPassword"
-                style={{ width: "20px", height: "20px" }}
-              />
-            </span>
-            <input
+            </TextField>
+          </Grid2>
+          <Grid2 item xs={12} mb={2}>
+            <TextField
+              label="Password"
+              variant="outlined"
               type="password"
-              className="form-control"
-              placeholder="Confirm password"
-              name="confirmPassword"
+              fullWidth
+              value={formData.password}
+              onChange={handleChange}
+              name="password"
+              placeholder="Enter your password"
+              required
+              InputProps={{
+                startAdornment: (
+                  <InputAdornment position="start">
+                    <img
+                      src={passwordIcon}
+                      alt="password"
+                      style={{ maxWidth: "20px", maxHeight: "20px" }}
+                    />
+                  </InputAdornment>
+                ),
+              }}
+            />
+          </Grid2>
+          <Grid2 item xs={12} mb={3}>
+            <TextField
+              label="Confirm Password"
+              variant="outlined"
+              type="password"
+              fullWidth
               value={formData.confirmPassword}
               onChange={handleChange}
-              aria-describedby="confirm-password-addon"
+              name="confirmPassword"
+              placeholder="Confirm your password"
+              required
+              InputProps={{
+                startAdornment: (
+                  <InputAdornment position="start">
+                    <img
+                      src={passwordIcon}
+                      alt="password"
+                      style={{ maxWidth: "20px", maxHeight: "20px" }}
+                    />
+                  </InputAdornment>
+                ),
+              }}
             />
-          </div>
-        </div>
-        <div className="d-flex justify-content-end mt-4 gap-2">
-          <button type="submit" className="btn btn-primary w-45">
-            ADD
-          </button>
-          <button
-            type="button"
-            onClick={handleCancel}
-            className="btn btn-secondary w-45"
-          >
-            Cancel
-          </button>
-        </div>
-      </form>
-    </div>
+          </Grid2>
+          <Grid2 item container justifyContent="space-between" spacing={2}>
+            <Grid2 item>
+              <Button
+                type="submit"
+                variant="contained"
+                color="primary"
+                fullWidth
+              >
+                Add User
+              </Button>
+            </Grid2>
+            <Grid2 item>
+              <Button
+                variant="outlined"
+                color="secondary"
+                fullWidth
+                onClick={handleCancel}
+              >
+                Cancel
+              </Button>
+            </Grid2>
+          </Grid2>
+        </Grid2>
+      </Box>
+    </Grid2>
   );
 }

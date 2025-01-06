@@ -1,34 +1,45 @@
-/* eslint-disable no-unused-vars, react-hooks/exhaustive-deps, react/jsx-pascal-case */
+/* eslint-disable react-hooks/exhaustive-deps */
+/* eslint-disable react/jsx-pascal-case */
 import React, { useEffect, useState } from "react";
-import { useNavigate, Link } from "react-router-dom";
+import { Link } from "react-router-dom";
 import { ToastContainer, toast } from "react-toastify";
-import "react-toastify/dist/ReactToastify.css";
-import axios from "../../../index";
-import SideBar from "../../SideBar";
-import Devices_main from "../../../assets/icons/monitoring-main-icon.png";
-import logout from "../../../assets/icons/logout.png";
-import Addition from "../../../assets/icons/Addition-button.png";
-import update from "../../../assets/icons/edit.png";
-import deleteIcon from "../../../assets/icons/trash.png";
+import { PageContainer } from "@toolpad/core/PageContainer";
 import qr_code from "../../../assets/icons/qr-code.png";
-import Delete from "../../../components/delete-ui/Delete";
 import Qrcode from "../qr-display/QrDisplay";
 import Download_file from "../config-dwnld/ConfigDownload";
+import AddCircleOutlinedIcon from '@mui/icons-material/AddCircleOutlined';
 
-/**
- * Devices Component
- *
- * This component displays a list of devices fetched from the server and provides functionalities
- * to add, update, delete devices, generate QR codes, and download config files for each device.
- *
- * @component
- */
-export default function Devices() {
-  const navigate = useNavigate();
+import {
+  Grid2,
+  Button,
+  Table,
+  TableBody,
+  TableCell,
+  TableContainer,
+  TableHead,
+  TableRow,
+  IconButton,
+  Box,
+  Typography,
+} from "@mui/material";
+import { styled } from "@mui/system";
+import axios from "../../../index";
+import device from "../../../assets/icons/monitoring-main-icon.png";
+import updateIcon from "../../../assets/icons/edit.png";
+import deleteIcon from "../../../assets/icons/trash.png";
+import Delete from "../../../components/delete-ui/Delete";
+import Sidebar from "../../SideBar";
+
+// Styled TableCell for MUI
+const StyledTableCell = styled(TableCell)(({ theme }) => ({
+  padding: theme.spacing(1),
+  textAlign: "center",
+}));
+
+export default function ListUser() {
   const [devices, setDevices] = useState([]);
   const [deletePopupVisible, setDeletePopupVisible] = useState(false);
   const [selectedDeviceId, setSelectedDeviceId] = useState(null);
-  const [userRole, setUserRole] = useState("");
   const [adminName, setAdminName] = useState("");
   const [qrCodeVisible, setQrCodeVisible] = useState(false);
 
@@ -37,7 +48,6 @@ export default function Devices() {
     if (loggedInUser) {
       const parsedUser = JSON.parse(loggedInUser);
       setAdminName(parsedUser.name || " ");
-      setUserRole(parsedUser.role || " ");
     }
 
     async function fetchDevices() {
@@ -53,10 +63,6 @@ export default function Devices() {
       } catch (err) {
         toast.error("Error fetching devices. Please try again.");
         console.error("Error fetching devices:", err);
-
-        if (err.response?.status === 401) {
-          handleLogout();
-        }
       }
     }
 
@@ -105,191 +111,155 @@ export default function Devices() {
     }
   };
 
-  /**
-   * Handles user logout by clearing the cookie and sending a logout request to the server.
-   */
-  const handleLogout = async () => {
-    try {
-      const response = await axios.post("/auth/logout");
-
-      if (response) {
-        toast.success("Logged out successfully!");
-        localStorage.clear();
-        setTimeout(() => navigate("/"), 300);
-      } else {
-        localStorage.clear();
-        setTimeout(() => navigate("/"), 300);
-        throw new Error("Failed to log out");
-      }
-    } catch (err) {
-      console.error("Error during logout: ", err);
-      toast.error("Failed to log out");
-    }
-  };
-
   return (
-    <div className="row mx-0" style={{ height: "100vh", overflowX: "hidden" }}>
-      <div className="col-md-3 col-lg-2 text-white p-0 position-fixed h-100">
-        <SideBar title={adminName} />
-      </div>
-
-      <div className="col-md-9 col-lg-10 offset-lg-2">
-        <button
-          className="btn btn-link d-flex align-items-center text-dark text-decoration-none"
-          style={{ marginTop: "30px", marginLeft: "87%" }}
-          onClick={handleLogout}
+    <Sidebar adminUsername={adminName}>
+      <PageContainer
+        sx={{
+          flexGrow: 1,
+          padding: 0,
+          minWidth: "100%",
+          overflow: "auto",
+        }}
+      >
+        <Box
+          sx={{
+            boxShadow: 10,
+            borderRadius: 5,
+            padding: 5,
+            backgroundColor: "#fff",
+            overflow: "hidden",
+            width: "100%",
+            maxWidth: "100%",
+            margin: "0 auto",
+            height: "calc(100vh - 130px)",
+            minHeight: "300px",
+          }}
         >
-          <label
-            style={{ fontSize: "20px", color: "black", cursor: "pointer" }}
+          <ToastContainer/>
+          <Grid2
+            container
+            justifyContent="center"
+            alignItems="center"
+            sx={{ overflowY: "auto", overflowX: { xs: "auto", md: "hidden" } }}
           >
-            Logout
-          </label>
-          <img
-            src={logout}
-            alt="logout"
-            className="ms-2 "
-            style={{ width: "20px", height: "20px" }}
-          />
-        </button>
-        <ToastContainer />
-        <div
-          className="container py-4 border mt-2"
-          style={{ width: "95%", height: "80vh" }}
-        >
-          <div className="d-flex justify-content-between align-items-center border-bottom">
-            <h3 className="d-flex align-items-center">
-              <img
-                src={Devices_main}
-                alt="Devices"
-                className="me-2"
-                style={{ height: "25px" }}
-              />
-              Devices
-            </h3>
-            <div className="button-listuser" style={{ marginBottom: "10px" }}>
-              <Link
-                to="/devicesList/add"
-                className="text-white text-decoration-none"
+            <Grid2 item size={10}>
+              <Grid2
+                container
+                justifyContent="space-between"
+                alignItems="center"
+                sx={{ mb: 2 }}
               >
-                <button
-                  className="btn btn-primary"
-                  style={{ padding: "5px 10px", alignItems: "center" }}
-                >
-                  <img
-                    src={Addition}
-                    alt="Add"
-                    className="me-2"
-                    style={{ width: "20px", height: "20px" }}
+                <Typography variant="h5" sx={{ display: "flex", alignItems: "center" }}>
+                  <Box
+                    component="img"
+                    src={device}
+                    alt="User"
+                    sx={{ height: "25px", mr: 1 }}
                   />
-                  Add
-                </button>
-              </Link>
-            </div>
-          </div>
-          <div className="">
-            <ul
-              className="list-unstyled m-0"
-              style={{
-                maxHeight: "60vh", 
-                overflowY: "auto", 
-                overflowX: "hidden", 
-                paddingRight: "10px", 
-              }}
-            >
-              {devices.map((device) => (
-                <li
-                  key={device.id}
-                  className="d-flex align-items-center justify-content-between py-2"
-                  style={{ padding: "0.5rem 1rem" }}
-                >
-                  <div
-                    style={{
-                      flex: 1,
-                      whiteSpace: "nowrap",
-                      overflow: "hidden",
-                      textOverflow: "ellipsis",
-                    }}
-                    title={device.name}
+                  Devices
+                </Typography>
+                <Link to="/devicesList/add">
+                  <Button
+                    variant="contained"
+                    sx={{ display: "flex", alignItems: "center" }}
+                    startIcon={<AddCircleOutlinedIcon />}
                   >
-                    <span>{device.name}</span>
-                  </div>
-                  <div
-                    style={{
-                      flex: 1,
-                      textAlign: "center",
-                    }}
-                  >
-                    <span>{device.latestHandshakeAt || "N/A"}</span>
-                  </div>
-                  <div
-                    style={{
-                      flex: 1,
-                      textAlign: "right",
-                      display: "flex",
-                      alignItems: "center",
-                      justifyContent: "flex-end",
-                      gap: "5px",
-                    }}
-                  >
-                    <Link
-                      to={`/devicesList/update/${device.id}`}
-                      state={{
-                        name: device.name,
-                        urlProfile: device.urlProfile,
-                        special: device.special,
-                      }}
-                    >
-                      <img
-                        src={update}
-                        alt="update"
-                        style={{ width: "20px", height: "20px",marginBottom:"3px" }}
-                      />
-                    </Link>
-                    <img
-                      src={qr_code}
-                      alt="qr-code"
-                      style={{
-                        width: "20px",
-                        height: "20px",
-                        cursor: "pointer",
-                      }}
-                      onClick={() => {
-                        setSelectedDeviceId(device.id);
-                        setQrCodeVisible(true);
-                      }}
-                    />
-                    <Download_file deviceID={device.id} />
-                    <img
-                      src={deleteIcon}
-                      alt="delete"
-                      style={{
-                        width: "20px",
-                        height: "20px",
-                        cursor: "pointer",
-                      }}
-                      onClick={() => handleDeleteAction("show", device.id)}
-                    />
-                  </div>
-                </li>
-              ))}
-            </ul>
-          </div>
-        </div>
-      </div>
+                    Add
+                  </Button>
+                </Link>
+              </Grid2>
 
-      <Delete
-        title={"Delete the device"}
-        description={"Are you sure you want to delete the device?"}
-        visible={deletePopupVisible}
-        onAction={handleDeleteAction}
-        onCancel={() => handleDeleteAction("cancel")}
-        onConfirm={() => handleDeleteAction("confirm")}
-      />
+              <TableContainer
+                sx={{
+                  maxHeight: "70vh",
+                  overflowY: "auto",
+                }}
+              >
+                <Table>
+                  <TableHead>
+                    <TableRow>
+                      <StyledTableCell>Devices</StyledTableCell>
+                      <StyledTableCell>Last Seen</StyledTableCell>
+                      <StyledTableCell>Actions</StyledTableCell>
+                    </TableRow>
+                  </TableHead>
+                  <TableBody>
+                    {devices.map((device) => (
+                      <TableRow key={device.id}>
+                        <StyledTableCell>{device.name}</StyledTableCell>
+                        <StyledTableCell>
+                          {device.latestHandshakeAt || "N/A"}
+                        </StyledTableCell>
+                        <StyledTableCell>
+                          <Link
+                            to={`/devicesList/update/${device.id}`}
+                            state={{
+                              name: device.name,
+                              urlProfile: device.urlProfile,
+                              special: device.special,
+                            }}
+                          >
+                            <IconButton>
+                              <img
+                                src={updateIcon}
+                                alt="update"
+                                style={{ width: "20px", height: "20px" }}
+                              />
+                            </IconButton>
+                          </Link>
+                          <IconButton
+                            onClick={() => {
+                              setSelectedDeviceId(device.id);
+                              setQrCodeVisible(true);
+                            }}
+                          >
+                            <img
+                              src={qr_code}
+                              alt="qr-code"
+                              style={{ width: "20px", height: "20px" }}
+                            />
+                          </IconButton>
+                          <IconButton>
+                            <Download_file deviceID={device.id} />
+                          </IconButton>
+                          <IconButton
+                            onClick={() =>
+                              handleDeleteAction("show", device.id)
+                            }
+                          >
+                            <img
+                              src={deleteIcon}
+                              alt="delete"
+                              style={{ width: "20px", height: "20px" }}
+                            />
+                          </IconButton>
+                        </StyledTableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </TableContainer>
+            </Grid2>
+          </Grid2>
+        </Box>
+      </PageContainer>
+
+      {/* Delete confirmation pop-up */}
+      {deletePopupVisible && (
+        <Delete
+          title={"Delete the user"}
+          description={"Are you sure you want to delete the user?"}
+          visible={deletePopupVisible}
+          onAction={handleDeleteAction}
+          onCancel={() => handleDeleteAction("cancel")}
+          onConfirm={() => handleDeleteAction("confirm")}
+        />
+      )}
       <Qrcode
         visible={qrCodeVisible}
         id={selectedDeviceId}
         onClose={() => setQrCodeVisible(false)}
       />
-    </div>
+    </Sidebar>
   );
 }
