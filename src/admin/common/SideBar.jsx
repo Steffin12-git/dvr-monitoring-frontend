@@ -1,17 +1,17 @@
 import React, { useState } from "react";
 import { extendTheme } from "@mui/material/styles";
 import { AppProvider } from "@toolpad/core/AppProvider";
-import AccountCircleIcon from "@mui/icons-material/AccountCircle";
 import GroupIcon from "@mui/icons-material/Group";
+import AccountCircleSharpIcon from "@mui/icons-material/AccountCircleSharp";
 import DevicesIcon from "@mui/icons-material/Devices";
 import { DashboardLayout } from "@toolpad/core/DashboardLayout";
-import main_logo from "../assets/icons/Main_logo.png";
+import main_logo from "../../assets/icons/Main_logo.png";
 import { IconButton, Menu, MenuItem } from "@mui/material";
 import { ToastContainer, toast } from "react-toastify";
-import axios from "../index";
+import axios from "../../index";
+import LogoutIcon from "@mui/icons-material/Logout";
 import ManageAccountsIcon from "@mui/icons-material/ManageAccounts";
 import { useNavigate } from "react-router-dom";
-
 
 const demoTheme = extendTheme({
   breakpoints: {
@@ -47,24 +47,14 @@ const Sidebar = ({ adminUsername, children }) => {
 
   const NAVIGATION = [
     {
-      kind: "header",
-      icon: <AccountCircleIcon sx={{ fontSize: 30 }} />,
-      title: adminUsername || "Admin",
-    },
-    {
-      kind: "divider",
-    },
-    {
-      segment: "usersList",
+      segment: "admin/users",
       title: "Users",
       icon: <GroupIcon />,
-      link: "/usersList",
     },
     {
-      segment: "devicesList",
-      title: "Devices",
+      segment: "admin/locations",
+      title: "Locations",
       icon: <DevicesIcon />,
-      link: "/devicesList",
     },
   ];
   const handleLogoClick = (e) => {
@@ -74,20 +64,21 @@ const Sidebar = ({ adminUsername, children }) => {
   const handleMenuClick = (event) => {
     setAnchorEl(event.currentTarget);
   };
-  
+
   const handleMenuClose = () => {
     setAnchorEl(null);
   };
-  
+
   const handleLogout = async () => {
     try {
       const response = await axios.post("/auth/logout");
       if (response) {
-        toast.success("Logged out successfully!");
         localStorage.clear();
-        setTimeout(() => navigate("/"), 300);
+         navigate("/login");
       } else {
-        toast.error("Failed to log out!");
+        toast.error("Failed to log out!", {
+          autoClose: 800,
+        });
         throw new Error("Failed to log out");
       }
     } catch (err) {
@@ -95,7 +86,6 @@ const Sidebar = ({ adminUsername, children }) => {
       toast.error("Failed to log out");
     }
   };
-
 
   return (
     <AppProvider
@@ -122,7 +112,7 @@ const Sidebar = ({ adminUsername, children }) => {
           height: "100vh",
           margin: 0,
           padding: 0,
-          backgroundColor: "#E0E0E0",
+          backgroundColor: "#ffffff",
           "& .MuiDrawer-paper": {
             maxWidth: 240,
             boxSizing: "border-box",
@@ -130,7 +120,7 @@ const Sidebar = ({ adminUsername, children }) => {
           position: "relative",
         }}
       >
-        <ToastContainer/>
+        <ToastContainer />
         <IconButton
           onClick={handleMenuClick}
           sx={{
@@ -143,7 +133,24 @@ const Sidebar = ({ adminUsername, children }) => {
           <ManageAccountsIcon sx={{ fontSize: 30 }} />
         </IconButton>
         <Menu anchorEl={anchorEl} open={open} onClose={handleMenuClose}>
-          <MenuItem onClick={handleLogout}>Logout</MenuItem>
+          <MenuItem
+            sx={{
+              borderBottom: "2px solid  #e0e0e0e0",
+              marginBottom: 2,
+            }}
+          >
+            <AccountCircleSharpIcon
+              sx={{
+                fontSize: 30,
+                marginRight: 0.5,
+              }}
+            />
+            {adminUsername || "Admin"}
+          </MenuItem>
+          <MenuItem onClick={handleLogout} sx={{ marginLeft: 0 }}>
+            <LogoutIcon sx={{ marginRight: 0.5 }} />
+            Logout
+          </MenuItem>
         </Menu>
         {children}
       </DashboardLayout>

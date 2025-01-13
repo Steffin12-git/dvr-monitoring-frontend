@@ -46,7 +46,7 @@ export default function Delete({ title, description, visible, onConfirm, onCance
           <Button variant="contained" color="primary" onClick={onConfirm}>
             Yes
           </Button>
-          <Button variant="outlined" color="secondary" onClick={onCancel}>
+          <Button variant="outlined" color="primary" onClick={onCancel}>
             No
           </Button>
         </Box>

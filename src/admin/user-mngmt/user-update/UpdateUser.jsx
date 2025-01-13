@@ -3,7 +3,8 @@ import React, { useState } from "react";
 import axios from "../../../index";
 import usernameIcon from "../../../assets/icons/username.png";
 import passwordIcon from "../../../assets/icons/password.png";
-import addNewUserIcon from "../../../assets/icons/update_user-icon2.png";
+//import addNewUserIcon from "../../../assets/icons/update_user-icon2.png";
+import ManageAccountsIcon from '@mui/icons-material/ManageAccounts';
 import { useLocation, useNavigate, useParams } from "react-router-dom";
 import { toast, ToastContainer } from "react-toastify";
 import { TextField, Button, Box, InputAdornment, Typography, Grid2, useTheme, useMediaQuery } from "@mui/material";
@@ -21,7 +22,7 @@ export default function Update_user() {
   const navigate = useNavigate();
   const { id } = useParams();
   const location = useLocation();
-    const theme = useTheme();
+  const theme = useTheme();
   const isSmallScreen = useMediaQuery(theme.breakpoints.down("sm"));
 
   const [user, setUser] = useState({
@@ -77,14 +78,49 @@ export default function Update_user() {
       if (response && response.data) {
         toast.success("User updated successfully!");
         setTimeout(() => {
-          navigate("/usersList");
-        }, 600);
+          navigate("/admin/users");
+        }, 800);
       } else {
         setError("Failed to update user. Please try again later.");
         toast.error("Failed to update user. Please try again later.");
       }
     } catch (err) {
-      toast.error("An error occurred. Please try again!");
+      const status = err.response?.status;
+      if (status === 400) {
+        setError("Invalid username or password.");
+        toast.error("Invalid username or password!", {
+          autoClose: 800,
+        });
+      } else if (status === 401) {
+        localStorage.removeItem("username");
+        localStorage.removeItem("role");
+        localStorage.removeItem("userId");
+        navigate("/login");
+        setError("Unauthorized. Please log in again.");
+        toast.error("Unauthorized. Please log in again!", {
+          autoClose: 800,
+        });
+      } else if (status === 403) {
+        setError("Access denied. User lacks permission.");
+        toast.error("Access denied. User lacks permission!", {
+          autoClose: 800,
+        });
+      } else if (status === 404) {
+        setError("User ID does not exist.");
+        toast.error("User ID does not exist!", {
+          autoClose: 800,
+        });
+      } else if (status === 409) {
+        setError("Updated username conflicts with an existing username.");
+        toast.error("Updated username conflicts with an existing username!", {
+          autoClose: 800,
+        });
+      } else {
+        setError("An error occurred. Please try again!");
+        toast.error("An error occurred. Please try again!", {
+          autoClose: 800,
+        });
+      }
     }
   }
 
@@ -92,7 +128,7 @@ export default function Update_user() {
    * Handles the cancellation of the form, redirecting to the users list.
    */
   function handleCancel() {
-    navigate("/usersList");
+    navigate("/admin/users");
   }
 
   /**
@@ -113,29 +149,28 @@ export default function Update_user() {
       container
       justifyContent="center"
       alignItems="center"
-      sx={{ minHeight: "100vh", bgcolor: "#e0e0e0",  padding: isSmallScreen ? 2 : 4, }}
+      sx={{ minHeight: "100vh", bgcolor: "#ffffff",  padding: isSmallScreen ? 2 : 4, }}
     >
       <ToastContainer />
       <Box
         component="form"
         sx={{
-          width: 400,
-          padding: 4,
+          width: isSmallScreen ? "80%" : 400,
+          padding: isSmallScreen ? 2 : 4,
           borderRadius: 5,
           boxShadow: 10,
           backgroundColor: "#ffffff",
         }}
         onSubmit={handleSubmit}
       >
-        <Grid2 container direction="column" alignItems="center">
-          <Grid2 item>
-            <img
-              src={addNewUserIcon}
-              alt="Add New User Icon"
-              sx={{ maxWidth: "50px", maxHeight: "50px" }}
-            />
-          </Grid2>
-          <Grid2 item mb={2}>
+        <Grid2 container direction="column" spacing={isSmallScreen ? 2 : 3}>
+          <Grid2 item textAlign="center">
+          <ManageAccountsIcon 
+            sx={{
+                fontSize: isSmallScreen ? 40 : 50,
+              }}
+          />
+          
             <Typography variant="h5" component="h2" gutterBottom sx={{ color: "#111111", fontWeight: "bold" }}>
               Update User
             </Typography>
@@ -148,7 +183,7 @@ export default function Update_user() {
               value={user.username}
               onChange={handleChange}
               name="username"
-              placeholder="Enter your username"
+              placeholder="Enter username"
               required
               InputProps={{
                 startAdornment: (
@@ -169,7 +204,6 @@ export default function Update_user() {
               variant="outlined"
               fullWidth
               select
-              sx={{ width: 240 }}
               name="role"
               value={user.role}
               onChange={handleChange}
@@ -191,7 +225,7 @@ export default function Update_user() {
               value={user.password}
               onChange={handleChange}
               name="password"
-              placeholder="Enter your password"
+              placeholder="Enter password"
               InputProps={{
                 startAdornment: (
                   <InputAdornment position="start">
@@ -205,14 +239,14 @@ export default function Update_user() {
               }}
             />
           </Grid2>
-          <Grid2 item container justifyContent="space-between" spacing={2}>
+          <Grid2 item container justifyContent="center" spacing={2}>
             <Grid2 item>
               <Button type="submit" variant="contained" color="primary" fullWidth>
                 Update
               </Button>
             </Grid2>
             <Grid2 item>
-              <Button variant="outlined" color="secondary" fullWidth onClick={handleCancel}>
+              <Button variant="outlined" color="primary" fullWidth onClick={handleCancel}>
                 Cancel
               </Button>
             </Grid2>

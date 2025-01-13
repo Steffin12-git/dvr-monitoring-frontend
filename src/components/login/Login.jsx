@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { Navigate, useNavigate } from "react-router-dom";
 import { toast, ToastContainer } from "react-toastify";
 import axios from "../../index";
 import {
@@ -27,6 +27,11 @@ export default function Login() {
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
 
+  const isLoggedIn = !!localStorage.getItem("role");
+
+  if (isLoggedIn) {
+    return <Navigate to="/" replace />;
+  }
   /**
    * Handles the login form submission.
    *
@@ -38,8 +43,7 @@ export default function Login() {
    */
   async function handleLogin(e) {
     e.preventDefault();
-
-    // Validate username and password lengths
+  
     if (username.trim().length < 4) {
       toast.error("Username must be at least 4 characters.");
       return;
@@ -48,58 +52,58 @@ export default function Login() {
       toast.error("Password must be at least 8 characters.");
       return;
     }
-
+  
     try {
       const response = await axios.post("/auth/login", {
         username: username.trim(),
         password: password.trim(),
       });
-
-      // Assuming response.data is a single user object
+  
       const user = response.data;
-
+  
       if (user && user.username === username && user.role && user.id) {
-        // Store user data in localStorage and navigate based on role
-        localStorage.setItem("loggedInUser", JSON.stringify(user));
-        toast.success("Login successful!");
-
-        if (user.role === "admin") {
-          navigate("/usersList");
-        } else {
-          navigate("/devicesList/urlProfiles");
-        }
+        localStorage.setItem("username", user.username);
+        localStorage.setItem("role", user.role);
+        localStorage.setItem("userId", user.id);
+  
+        toast.success("Login successful!", {
+          autoClose: 800,
+        });
+  
+        const redirectPath = localStorage.getItem("redirectAfterLogin") || "/";
+        localStorage.removeItem("redirectAfterLogin");
+        navigate(redirectPath);
       } else {
-        toast.error("Invalid username or password");
+        toast.error("Invalid username or password", {
+          autoClose: 800,
+        });
       }
     } catch (err) {
       console.error("Login error:", err);
-
+  
       if (err.response && err.response.status === 401) {
-        toast.error("Unauthorized access. Please check your credentials.");
+        toast.error("Unauthorized access. Please check your credentials.", {
+          autoClose: 800,
+        });
       } else if (err.response && err.response.status === 404) {
-        toast.error("Login endpoint not found. Check your backend route.");
+        toast.error("Login endpoint not found. Check your backend route.", {
+          autoClose: 800,
+        });
       } else {
-        toast.error(err.message || "An error occurred. Please try again.");
+        toast.error(err.message || "An error occurred. Please try again.", {
+          autoClose: 800,
+        });
       }
     }
   }
-
-  /**
-   * Resets the username and password fields.
-   * Displays a cancel toast notification.
-   */
-  function handleCancel() {
-    setUsername("");
-    setPassword("");
-    toast.info("Login canceled.");
-  }
-
+  
   return (
-    <Grid2 
-    container
-    justifyContent="center"
-    alignItems="center"
-    sx={{ minHeight: "100vh", bgcolor: "#e0e0e0" }}>
+    <Grid2
+      container
+      justifyContent="center"
+      alignItems="center"
+      sx={{ minHeight: "100vh", bgcolor: "#ffffff" }}
+    >
       <ToastContainer />
       <Box
         component="form"
@@ -173,26 +177,17 @@ export default function Login() {
               }}
             />
           </Grid2>
-          <Grid2 item container justifyContent="space-between" spacing={2}>
-            <Grid2 item>
+          <Grid2 item container justifyContent="center" spacing={2}>
+            <Grid2 item >
               <Button
                 type="submit"
                 variant="contained"
                 color="primary"
                 fullWidth
                 disabled={!username || !password}
+                sx={{width:100}}
               >
                 Login
-              </Button>
-            </Grid2>
-            <Grid2 item>
-              <Button
-                variant="outlined"
-                color="secondary"
-                fullWidth
-                onClick={handleCancel}
-              >
-                Cancel
               </Button>
             </Grid2>
           </Grid2>

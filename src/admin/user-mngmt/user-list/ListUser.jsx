@@ -1,6 +1,7 @@
+/* eslint-disable react-hooks/exhaustive-deps */
 import React, { useEffect, useState } from "react";
-import { ToastContainer, toast } from "react-toastify";
-import AddCircleOutlinedIcon from '@mui/icons-material/AddCircleOutlined';
+import { toast } from "react-toastify";
+import AddCircleOutlinedIcon from "@mui/icons-material/AddCircleOutlined";
 import {
   Grid2,
   Button,
@@ -8,20 +9,19 @@ import {
   TableBody,
   TableCell,
   TableContainer,
-  TableHead,
   TableRow,
   IconButton,
   Box,
   Typography,
 } from "@mui/material";
 import { styled } from "@mui/system";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import axios from "../../../index";
-import Sidebar from "../../SideBar";
+import Sidebar from "../../common/SideBar";
 import User from "../../../assets/icons/user.png";
 import updateIcon from "../../../assets/icons/edit.png";
 import deleteIcon from "../../../assets/icons/trash.png";
-import Delete from "../../../components/delete-ui/Delete";
+import Delete from "../../../components/delete-modal/Delete";
 import { PageContainer } from "@toolpad/core";
 
 const StyledTableCell = styled(TableCell)(({ theme }) => ({
@@ -34,26 +34,56 @@ export default function ListUser() {
   const [deletePopupVisible, setDeletePopupVisible] = useState(false);
   const [selectedUserId, setSelectedUserId] = useState(null);
   const [adminUsername, setAdminUsername] = useState("");
+  const navigate = useNavigate();
 
   useEffect(() => {
-    const loggedInUser = localStorage.getItem("loggedInUser");
+    const loggedInUser = localStorage.getItem("username");
     if (loggedInUser) {
-      const parsedUser = JSON.parse(loggedInUser);
-      setAdminUsername(parsedUser.username || "");
+      setAdminUsername(loggedInUser || " ");
     }
 
     const fetchUsers = async () => {
       try {
         const response = await axios.get("/users");
-        setUsers(response.data || []);
+        if (response && response.data) {
+          setUsers(response.data);
+        } else {
+          toast.error("Failed to fetch users", { autoClose: 800 });
+        }
       } catch (err) {
+        if (err.response?.status === 401) {
+          localStorage.removeItem("username");
+          localStorage.removeItem("role");
+          localStorage.removeItem("userId");
+          navigate("/login");
+          toast.error("Unauthorized: Please log in.", { autoClose: 800 });
+        } else if (err.response?.status === 403) {
+          toast.error("Permission Denied: You lack the required permissions.", {
+            autoClose: 800,
+          });
+        } else {
+          toast.error("Failed to fetch users. Please try again!", {
+            autoClose: 800,
+          });
+        }
         console.error("Error fetching users", err);
-        toast.error("Failed to fetch users");
       }
     };
-
     fetchUsers();
-  }, []);
+
+    const intervalId = setInterval(() => {
+      fetchUsers();
+    }, 3000);
+
+    return () => clearInterval(intervalId);
+  },[]);
+
+  /**
+   * Handles various delete actions
+   *
+   * @param {string} action - The action to perform: "show", "confirm", or "cancel".
+   * @param {string|null} id - The ID of the device to delete (only used for "show" action).
+   */
 
   const handleDeleteAction = async (action, id = null) => {
     switch (action) {
@@ -65,14 +95,44 @@ export default function ListUser() {
         try {
           const response = await axios.delete(`/users/${selectedUserId}`);
           if (response.status === 200) {
-            setUsers(users.filter((user) => user.id !== selectedUserId));
-            toast.success("User deleted successfully");
+            const loggedInUserId = localStorage.getItem("userId");
+            if (loggedInUserId === selectedUserId) {
+              localStorage.removeItem("username");
+              localStorage.removeItem("role");
+              localStorage.removeItem("userId");
+              navigate("/login");
+              toast.error("Your account has been deleted. Please log in again.", { autoClose: 800 });
+            } else {
+              setUsers(users.filter((user) => user.id !== selectedUserId));
+              toast.success("User deleted successfully", {
+                autoClose: 800,
+              });
+            }
           } else {
-            toast.error("Failed to delete user");
+            toast.error("Failed to delete user", {
+              autoClose: 800,
+            });
           }
         } catch (err) {
+          if (err.response?.status === 401) {
+            localStorage.removeItem("username");
+            localStorage.removeItem("role");
+            localStorage.removeItem("userId");
+            navigate("/login");  
+            toast.error("Unauthorized: Please log in.", { autoClose: 800 });
+          } else if (err.response?.status === 403) {
+            toast.error(
+              "Permission Denied: You lack the required permissions.",
+              {
+                autoClose: 800,
+              }
+            );
+          } else if (err.response?.status === 404) {
+            toast.error("User ID does not exist.", { autoClose: 800 });
+          } else {
+            toast.error("Error deleting user", { autoClose: 800 });
+          }
           console.error("Error deleting user: ", err);
-          toast.error("Error deleting user");
         } finally {
           setDeletePopupVisible(false);
           setSelectedUserId(null);
@@ -83,37 +143,30 @@ export default function ListUser() {
         setSelectedUserId(null);
         break;
       default:
-        toast.warn("Invalid delete action.");
+        toast.warn("Invalid delete action.", {
+          autoClose: 800,
+        });
     }
   };
 
   return (
     <Sidebar adminUsername={adminUsername}>
       <PageContainer
-        sx={{ flexGrow: 1, minWidth: "100%", padding: 0, overflow: "auto" }}
+        sx={{
+          flexGrow: 1,
+          minWidth: "100%",
+          padding: 0,
+        }}
       >
         <Box
           sx={{
-            boxShadow: 10,
-            borderRadius: 5,
-            padding: 5,
-            backgroundColor: "#fff",
-            overflow: "hidden",
-            width: "100%",
+            backgroundColor: "#ffffff",
             maxWidth: "100%",
-            margin: "0 auto",
             height: "calc(100vh - 130px)",
-            minHeight: "300px",
           }}
         >
-          <ToastContainer />
-          <Grid2
-            container
-            justifyContent="center"
-            alignItems="center"
-            sx={{ overflowY: "auto", overflowX: { xs: "auto", md: "hidden" } }}
-          >
-            <Grid2 item size={10}>
+          <Grid2 container justifyContent="center" alignItems="center">
+            <Grid2 item size={11}>
               <Grid2
                 container
                 justifyContent="space-between"
@@ -128,15 +181,15 @@ export default function ListUser() {
                     component="img"
                     src={User}
                     alt="User"
-                    sx={{ height: "25px", mr: 1 }}
+                    sx={{ height: 30, mr: 1 }}
                   />
                   Users
                 </Typography>
-                <Link to="/usersList/add">
+                <Link to="/admin/users/add">
                   <Button
                     variant="contained"
                     sx={{ display: "flex", alignItems: "center" }}
-                    startIcon = {<AddCircleOutlinedIcon/>}
+                    startIcon={<AddCircleOutlinedIcon />}
                   >
                     Add
                   </Button>
@@ -147,24 +200,22 @@ export default function ListUser() {
                 sx={{
                   maxHeight: "70vh",
                   overflowY: "auto",
+                  padding: 1,
                 }}
               >
                 <Table>
-                  <TableHead>
-                    <TableRow>
-                      <StyledTableCell>Username</StyledTableCell>
-                      <StyledTableCell>Role</StyledTableCell>
-                      <StyledTableCell>Actions</StyledTableCell>
-                    </TableRow>
-                  </TableHead>
                   <TableBody>
                     {users.map((user) => (
                       <TableRow key={user.id}>
-                        <StyledTableCell>{user.username}</StyledTableCell>
-                        <StyledTableCell>{user.role}</StyledTableCell>
+                        <StyledTableCell sx={{ textAlign: "left" }}>
+                          {user.username}
+                        </StyledTableCell>
+                        <StyledTableCell sx={{ textAlign: "left" }}>
+                          {user.role}
+                        </StyledTableCell>
                         <StyledTableCell>
                           <Link
-                            to={`/usersList/update/${user.id}`}
+                            to={`/admin/users/update/${user.id}`}
                             state={{ username: user.username, role: user.role }}
                           >
                             <IconButton>
