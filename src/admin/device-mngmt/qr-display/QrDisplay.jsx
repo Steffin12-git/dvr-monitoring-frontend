@@ -19,7 +19,7 @@ import {
  * @returns {JSX.Element|null} A modal displaying the QR code, or null if not visible.
  */
 export default function Qrcode({ visible, id, onClose }) {
-  const imageSrc = 'http://localhost:5000/api/locations/'+id+'/qrcode'
+  const imageSrc = axios.defaults.baseURL+'/locations/'+id+'/qrcode'
   return (
     <Modal
       open={visible}

@@ -12,7 +12,7 @@ import downloadIcon from "../../../assets/icons/config-download.png";
  */
 export default function DownloadFile({ deviceID }) {
 
-  const configuration = `http://localhost:5000/api/locations/${deviceID}/configuration`
+  const configuration = axios.defaults.baseURL+ `/locations/${deviceID}/configuration`
   return (
     <>
       <a href={configuration}
