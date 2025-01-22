@@ -1,255 +1,265 @@
-/* eslint-disable no-unused-vars */
+/* eslint-disable react-hooks/exhaustive-deps */
 import React, { useEffect, useState } from "react";
-import "../../../index.css";
+import { toast } from "react-toastify";
+import AddCircleOutlinedIcon from "@mui/icons-material/AddCircleOutlined";
+import {
+  Grid2,
+  Button,
+  Table,
+  TableBody,
+  TableCell,
+  TableContainer,
+  TableRow,
+  IconButton,
+  Box,
+  Typography,
+} from "@mui/material";
+import { styled } from "@mui/system";
+import { Link, useNavigate } from "react-router-dom";
 import axios from "../../../index";
-import { useNavigate, Link } from "react-router-dom";
-import { ToastContainer, toast } from "react-toastify";
-import SideBar from "../../SideBar";
+import Sidebar from "../../common/SideBar";
 import User from "../../../assets/icons/user.png";
-import logoutIcon from "../../../assets/icons/logout.png";
-import addIcon from "../../../assets/icons/Addition-button.png";
 import updateIcon from "../../../assets/icons/edit.png";
 import deleteIcon from "../../../assets/icons/trash.png";
-import Delete from "../../../components/delete-ui/Delete";
+import Delete from "../../../components/delete-modal/Delete";
+import { PageContainer } from "@toolpad/core";
 
-/**
- * ListUser Component
- * A React component for displaying a list of users with options to delete users, add new users, and log out.
- *
- * @component
- * @example
- *
- * @returns {JSX.Element} The rendered component.
- */
+const StyledTableCell = styled(TableCell)(({ theme }) => ({
+  padding: theme.spacing(1),
+  textAlign: "center",
+}));
+
 export default function ListUser() {
-  const navigate = useNavigate();
   const [users, setUsers] = useState([]);
   const [deletePopupVisible, setDeletePopupVisible] = useState(false);
   const [selectedUserId, setSelectedUserId] = useState(null);
-  const [adminName, setAdminName] = useState("");
-  const [userRole, setUserRole] = useState("");
+  const [adminUsername, setAdminUsername] = useState("");
+  const navigate = useNavigate();
 
   useEffect(() => {
-    const loggedInUser = localStorage.getItem("loggedInUser");
+    const loggedInUser = localStorage.getItem("username");
     if (loggedInUser) {
-      const parsedUser = JSON.parse(loggedInUser);
-      setAdminName(parsedUser.name || "");
-      setUserRole(parsedUser.role || "");
+      setAdminUsername(loggedInUser || " ");
     }
 
     const fetchUsers = async () => {
       try {
-        const response = await axios.get("/users"); 
-        setUsers(response.data || []);
+        const response = await axios.get("/users");
+        if (response && response.data) {
+          setUsers(response.data);
+        } else {
+          toast.error("Failed to fetch users", { autoClose: 800 });
+        }
       } catch (err) {
+        if (err.response?.status === 401) {
+          localStorage.removeItem("username");
+          localStorage.removeItem("role");
+          localStorage.removeItem("userId");
+          navigate("/login");
+          toast.error("Unauthorized: Please log in.", { autoClose: 800 });
+        } else if (err.response?.status === 403) {
+          toast.error("Permission Denied: You lack the required permissions.", {
+            autoClose: 800,
+          });
+        } else {
+          toast.error("Failed to fetch users. Please try again!", {
+            autoClose: 800,
+          });
+        }
         console.error("Error fetching users", err);
-        toast.error("Failed to fetch users");
       }
     };
-
     fetchUsers();
+
+    const intervalId = setInterval(() => {
+      fetchUsers();
+    }, 3000);
+
+    return () => clearInterval(intervalId);
   }, []);
 
   /**
-   * Handles the delete user actions.
+   * Handles various delete actions
    *
-   * @param {string} action - The type of delete action to perform ('show', 'confirm', 'cancel').
-   * @param {string} [id] - The ID of the user to delete (required if action is 'show' or 'confirm').
+   * @param {string} action - The action to perform: "show", "confirm", or "cancel".
+   * @param {string|null} id - The ID of the device to delete (only used for "show" action).
    */
+
   const handleDeleteAction = async (action, id = null) => {
     switch (action) {
       case "show":
         setSelectedUserId(id);
         setDeletePopupVisible(true);
         break;
-
       case "confirm":
         try {
-          const response = await axios.delete(`/users/${selectedUserId}`); 
+          const response = await axios.delete(`/users/${selectedUserId}`);
           if (response.status === 200) {
-            setUsers(users.filter((user) => user.id !== selectedUserId));
-            toast.success("User deleted successfully");
+            const loggedInUserId = localStorage.getItem("userId");
+            if (loggedInUserId === selectedUserId) {
+              localStorage.removeItem("username");
+              localStorage.removeItem("role");
+              localStorage.removeItem("userId");
+              navigate("/login");
+              toast.error(
+                "Your account has been deleted. Please log in again.",
+                { autoClose: 800 }
+              );
+            } else {
+              setUsers(users.filter((user) => user.id !== selectedUserId));
+              toast.success("User deleted successfully", {
+                autoClose: 800,
+              });
+            }
           } else {
-            toast.error("Failed to delete user");
+            toast.error("Failed to delete user", {
+              autoClose: 800,
+            });
           }
         } catch (err) {
+          if (err.response?.status === 401) {
+            localStorage.removeItem("username");
+            localStorage.removeItem("role");
+            localStorage.removeItem("userId");
+            navigate("/login");
+            toast.error("Unauthorized: Please log in.", { autoClose: 800 });
+          } else if (err.response?.status === 403) {
+            toast.error(
+              "Permission Denied: You lack the required permissions.",
+              {
+                autoClose: 800,
+              }
+            );
+          } else if (err.response?.status === 404) {
+            toast.error("User ID does not exist.", { autoClose: 800 });
+          } else {
+            toast.error("Error deleting user", { autoClose: 800 });
+          }
           console.error("Error deleting user: ", err);
-          toast.error("Error deleting user");
         } finally {
           setDeletePopupVisible(false);
           setSelectedUserId(null);
         }
         break;
-
       case "cancel":
         setDeletePopupVisible(false);
         setSelectedUserId(null);
         break;
-
       default:
-        console.error("Invalid action for delete");
-    }
-  };
-
-  const handleLogout = async () => {
-    try {
-      const response = await axios.post("/auth/logout"); 
-      if (response) {
-        toast.success("Logged out successfully!");
-        localStorage.clear();
-        setTimeout(() => navigate("/"), 300);
-      } else {
-        localStorage.clear();
-        setTimeout(() => navigate("/"), 300);
-        toast.error("Failed to log out!");
-        throw new Error("Failed to log out");
-      }
-    } catch (err) {
-      console.error("Error during logout: ", err);
-      toast.error("Failed to log out");
+        toast.warn("Invalid delete action.", {
+          autoClose: 800,
+        });
     }
   };
 
   return (
-    <div className="row mx-0" style={{ height: "100vh", overflowX: "hidden" }}>
-      <div className="col-md-3 col-lg-2 text-white p-0 position-fixed h-100">
-        <SideBar title={adminName} />
-      </div>
-
-      <div className="col-md-9 col-lg-10 offset-lg-2">
-        <button
-          className="btn btn-link d-flex align-items-center text-dark text-decoration-none"
-          style={{ marginLeft: "87%", marginTop: "30px" }}
-          onClick={handleLogout}
-        >
-          <label style={{ fontSize: "20px", cursor: "pointer" }}>Logout</label>
-          <img
-            src={logoutIcon}
-            alt="logout"
-            className="ms-2"
-            style={{ width: "20px", height: "20px" }}
-          />
-        </button>
-
-        <ToastContainer />
-
-        <div
-          className="main-listUser container py-4 border mt-2"
-          style={{
-            width: "95%",
-            height: "80vh",
+    <Sidebar adminUsername={adminUsername}>
+      <PageContainer
+        sx={{
+          flexGrow: 1,
+          minWidth: "100%",
+          padding: 0,
+        }}
+      >
+        <Box
+          sx={{
+            backgroundColor: "#ffffff",
             maxWidth: "100%",
-            overflowX: "auto",
+            height: "calc(100vh - 130px)",
           }}
         >
-          <div className="d-flex justify-content-between align-items-center border-bottom">
-            <h3 className="d-flex align-items-center">
-              <img
-                src={User}
-                alt="User"
-                className="me-2"
-                style={{ height: "25px" }}
-              />
-              Users
-            </h3>
-            <Link
-              to="/usersList/add"
-              className="btn btn-primary d-flex align-items-center mb-2"
-            >
-              <img
-                src={addIcon}
-                alt="Add"
-                className="me-2"
-                style={{ width: "20px", height: "20px" }}
-              />
-              Add
-            </Link>
-          </div>
+          <Grid2 container justifyContent="center" alignItems="center">
+            <Grid2 item size={11}>
+              <Grid2
+                container
+                justifyContent="space-between"
+                alignItems="center"
+                sx={{ mb: 2 }}
+              >
+                <Typography
+                  variant="h5"
+                  sx={{ display: "flex", alignItems: "center" }}
+                >
+                  <Box
+                    component="img"
+                    src={User}
+                    alt="User"
+                    sx={{ height: 30, mr: 1 }}
+                  />
+                  Users
+                </Typography>
+                <Link to="/admin/users/add">
+                  <Button
+                    variant="contained"
+                    sx={{ display: "flex", alignItems: "center" }}
+                    startIcon={<AddCircleOutlinedIcon />}
+                  >
+                    Add
+                  </Button>
+                </Link>
+              </Grid2>
 
-          <ul
-            className="list-unstyled m-0"
-            style={{
-              maxHeight: "60vh", 
-              overflowY: "auto", 
-              overflowX: "hidden", 
-              paddingRight: "10px", 
-            }}          >
-            {users.map((user) => (
-              <li
-                key={user.id}
-                className="d-flex align-items-center justify-content-between py-2"
-                style={{
-                  padding: "0.5rem 1rem",
+              <TableContainer
+                sx={{
+                  maxHeight: "70vh",
+                  overflowY: "auto",
+                  padding: 1,
                 }}
               >
-                <div
-                  style={{
-                    flex: 1,
-                    whiteSpace: "nowrap",
-                    overflow: "hidden",
-                    textOverflow: "ellipsis",
-                  }}
-                  title={user.name}
-                >
-                  <span>{user.name}</span>
-                </div>
-
-                <div
-                  style={{
-                    flex: 1,
-                    textAlign: "center",
-                  }}
-                >
-                  <span>{user.role}</span>
-                </div>
-
-                <div
-                  style={{
-                    flex: 1,
-                    textAlign: "right",
-                  }}
-                >
-                  <Link
-                    to={`/usersList/update/${user.id}`}
-                    state={{ name: user.name, role: user.role }} 
-                  >
-                    <img
-                      src={updateIcon}
-                      alt="update"
-                      style={{
-                        width: "20px",
-                        height: "20px",
-                        marginRight: "10px",
-                      }}
-                    />
-                  </Link>
-                  <img
-                    src={deleteIcon}
-                    alt="delete"
-                    style={{
-                      width: "20px",
-                      height: "20px",
-                      cursor: "pointer",
-                    }}
-                    onClick={() => handleDeleteAction("show", user.id)}
-                  />
-                </div>
-              </li>
-            ))}
-          </ul>
-        </div>
-      </div>
-
+                <Table>
+                  <TableBody>
+                    {users.map((user) => (
+                      <TableRow key={user.id}>
+                        <StyledTableCell sx={{ textAlign: "left" }}>
+                          {user.username}
+                        </StyledTableCell>
+                        <StyledTableCell sx={{ textAlign: "left" }}>
+                          {user.role}
+                        </StyledTableCell>
+                        <StyledTableCell>
+                          <Link
+                            to={`/admin/users/update/${user.id}`}
+                            state={{ username: user.username, role: user.role }}
+                          >
+                            <IconButton>
+                              <Box
+                                component="img"
+                                src={updateIcon}
+                                alt="update"
+                                sx={{ width: "20px", height: "20px" }}
+                              />
+                            </IconButton>
+                          </Link>
+                          <IconButton
+                            onClick={() => handleDeleteAction("show", user.id)}
+                          >
+                            <Box
+                              component="img"
+                              src={deleteIcon}
+                              alt="delete"
+                              sx={{ width: "20px", height: "20px" }}
+                            />
+                          </IconButton>
+                        </StyledTableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </TableContainer>
+            </Grid2>
+          </Grid2>
+        </Box>
+      </PageContainer>
       {deletePopupVisible && (
         <Delete
-          title={"Delete the user"}
-          description={"Are you sure you want to delete the user?"}
+          title="Delete the user"
+          description="Are you sure you want to delete the user?"
           visible={deletePopupVisible}
           onAction={handleDeleteAction}
           onCancel={() => handleDeleteAction("cancel")}
           onConfirm={() => handleDeleteAction("confirm")}
         />
       )}
-    </div>
+    </Sidebar>
   );
 }

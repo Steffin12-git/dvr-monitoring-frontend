@@ -1,89 +1,79 @@
 /* eslint-disable react-hooks/exhaustive-deps, no-unused-vars, react/prop-types */
 import React, { useEffect, useState } from "react";
-import { toast } from "react-toastify";
 import axios from "../../../index";
+import {
+  Modal,
+  Box,
+  Backdrop,
+  CircularProgress,
+  Typography,
+} from "@mui/material";
 
 /**
  * Qrcode Component
  *
  * @param {Object} props - Component properties.
  * @param {boolean} props.visible - Determines whether the QR code modal is visible.
- * @param {string} props.id - The ID of the device for which the QR code is to be fetched.
+ * @param {string} props.id - The ID of the location for which the QR code is to be fetched.
  * @param {Function} props.onClose - Callback function to close the modal.
  * @returns {JSX.Element|null} A modal displaying the QR code, or null if not visible.
  */
 export default function Qrcode({ visible, id, onClose }) {
-  /**
-   * @typedef {string|null} QRCodeData
-   * Represents the URL of the fetched QR code.
-   */
-  const [qrCodeData, setQrCodeData] = useState(null);
-
-  /**
-   * Fetches the QR code image from the server using the provided `id`.
-   * If successful, sets the QR code URL in the component state.
-   * Displays an error toast in case of a failure.
-   *
-   * @async
-   * @returns {Promise<void>}
-   */
-  async function fetchQRCode() {
-    try {
-      const response = await axios.get(`/devices/${id}/qrcode`); 
-      if (response.status !== 200 || !response.data) {
-        toast.error("Failed to fetch QR code");
-        throw new Error("Failed to fetch QR code");
-      }
-      setQrCodeData(response.data);
-    } catch (err) {
-      toast.error("An error occurred while fetching the QR code.");
-      console.error("Error fetching QR code: ", err);
-    }
-  }
-  
-
-  useEffect(() => {
-    if (visible && id) {
-      fetchQRCode();
-    }
-  }, [id, visible]);
-
-  if (!visible || !qrCodeData) {
-    return null;
-  }
-
+  const imageSrc = axios.defaults.baseURL+'/locations/'+id+'/qrcode'
   return (
-    <div
-      className="position-fixed top-0 start-0 w-100 h-100"
-      style={{
-        backgroundColor: "rgba(0, 0, 0, 0.5)",
-        zIndex: 1050,
-        display: "flex",
-        justifyContent: "center",
-        alignItems: "center",
-      }}
-      onClick={(event) => {
-        if (event.target === event.currentTarget) onClose();
+    <Modal
+      open={visible}
+      onClose={onClose}
+      closeAfterTransition
+      BackdropComponent={Backdrop}
+      BackdropProps={{
+        timeout: 500,
       }}
     >
-      <div
-        className="bg-white p-4 rounded shadow"
-        style={{
-          width: "50vw",
-          height: "90vh",
+      <Box
+        sx={{
+          position: "absolute",
+          top: "50%",
+          left: "50%",
+          transform: "translate(-50%, -50%)",
+          width: "100%",
+          maxWidth: 500,
+          bgcolor: "background.paper",
+          boxShadow: 24,
+          borderRadius: 2,
+          p: 3,
+          textAlign: "center",
+          zIndex: 1300,
         }}
       >
-        <img
-          src={qrCodeData}
-          alt="QR Code"
-          style={{
-            width: "100%",
-            height: "80vh",
-            objectFit: "contain",
-            margin: "10px",
-          }}
-        />
-      </div>
-    </div>
+        <Box>
+          <Typography variant="h6" mb={2}>
+            QR Code
+          </Typography>
+          <Box
+            sx={{
+              display: "flex",
+              justifyContent: "center",
+              alignItems: "center",
+              width: "100%",
+              overflow: "hidden",
+            }}
+          >
+            <Box
+              component='img'
+              sx={{
+                display: "flex",
+                justifyContent: "center",
+                alignItems: "center",
+                width: "100%",
+                maxHeight: "80vh",
+                overflow: "hidden",
+              }}
+              src={imageSrc}
+            />
+          </Box>
+        </Box>
+      </Box>
+    </Modal>
   );
 }

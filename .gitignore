@@ -7,6 +7,9 @@
 
 # testing
 /coverage
+__test__
+__mocks__
+babel.config.js
 
 # production
 /build
