@@ -29,6 +29,7 @@ import deleteIcon from "../../../assets/icons/trash.png";
 import Delete from "../../../components/delete-modal/Delete";
 import Sidebar from "../../common/SideBar";
 import { isDeviceOnline } from "../../../components/shared/DeviceStatus";
+import moment from "moment";
 
 const StyledTableCell = styled(TableCell)(({ theme }) => ({
   padding: theme.spacing(1),
@@ -78,7 +79,7 @@ export default function Devices() {
 
     const intervalId = setInterval(() => {
       fetchDevices();
-    }, 3000); 
+    }, 1000); 
 
     return () => clearInterval(intervalId); 
   }, []);
@@ -281,7 +282,11 @@ export default function Devices() {
                               fontSize: "0.9rem",
                             }}
                           >
-                            {device.latestHandshakeAt || "N/A"}
+                            {device.latestHandshakeAt
+                              ? moment(device.latestHandshakeAt).format(
+                                  "D MMMM YYYY, h:mm a"
+                                )
+                              : "N/A"}
                           </StyledTableCell>
 
                           <StyledTableCell

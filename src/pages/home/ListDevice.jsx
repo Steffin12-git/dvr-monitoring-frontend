@@ -26,6 +26,7 @@ import {
 import axios from "../../index";
 import main_logo from "../../assets/icons/Main_logo.png";
 import { isDeviceOnline } from "../../components/shared/DeviceStatus";
+import moment from "moment";
 
 const demoTheme = extendTheme({
   breakpoints: {
@@ -78,11 +79,11 @@ export default function DeviceListUser() {
         const locationResponse = await axios.get("/locations");
         const locationData = locationResponse.data;
         const locations = locationData.filter((location) => {
-          if (Boolean(location.special) === true){
+          if (Boolean(location.special) === true) {
             return false;
           }
           return true;
-        })
+        });
 
         const profileResponse = await axios.get("/urlProfiles");
         const profilesData = profileResponse.data;
@@ -115,7 +116,7 @@ export default function DeviceListUser() {
     }
 
     fetchData();
-    const intervalId = setInterval(fetchData, 3000);
+    const intervalId = setInterval(fetchData, 1000);
 
     return () => clearInterval(intervalId);
   }, []);
@@ -226,17 +227,17 @@ export default function DeviceListUser() {
           }}
         >
           <Typography
-                  variant="h5"
-                  sx={{ display: "flex", alignItems: "center" }}
-                >
-                  <Box
-                    component="img"
-                    src={deviceIcon}
-                    alt="Device Icon"
-                    sx={{ height: 30, mr: 1 }}
-                  />
-                  Locations
-                </Typography>
+            variant="h5"
+            sx={{ display: "flex", alignItems: "center" }}
+          >
+            <Box
+              component="img"
+              src={deviceIcon}
+              alt="Device Icon"
+              sx={{ height: 30, mr: 1 }}
+            />
+            Locations
+          </Typography>
           <ToastContainer />
           <TableContainer
             sx={{
@@ -245,13 +246,11 @@ export default function DeviceListUser() {
             }}
           >
             <Table>
-              
               <TableBody>
-                { devices.map((device) => {
+                {devices.map((device) => {
                   const isOnline = isDeviceOnline(device.latestHandshakeAt);
                   return (
                     <TableRow key={device.id}>
-                      
                       <StyledTableCell>
                         <Box
                           sx={{
@@ -311,7 +310,11 @@ export default function DeviceListUser() {
                       </StyledTableCell>
 
                       <StyledTableCell>
-                        {device.latestHandshakeAt || "N/A"}
+                        {device.latestHandshakeAt
+                          ? moment(device.latestHandshakeAt).format(
+                              "D MMMM YYYY, h:mm a"
+                            )
+                          : "N/A"}
                       </StyledTableCell>
 
                       <StyledTableCell
@@ -349,12 +352,10 @@ export default function DeviceListUser() {
                           </Box>
                         ))}
                       </StyledTableCell>
-                      
                     </TableRow>
                   );
                 })}
               </TableBody>
-             
             </Table>
           </TableContainer>
         </Box>
