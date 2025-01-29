@@ -205,7 +205,7 @@ export default function ListUser() {
                       <StyledTableCell sx={{ textAlign: "left" }}>
                         Name
                       </StyledTableCell>
-                      <StyledTableCell sx={{ textAlign: "left" }}>
+                      <StyledTableCell >
                         Role
                       </StyledTableCell>
                       <StyledTableCell
@@ -222,7 +222,7 @@ export default function ListUser() {
                         <StyledTableCell sx={{ textAlign: "left" }}>
                           {user.username}
                         </StyledTableCell>
-                        <StyledTableCell sx={{ textAlign: "left" }}>
+                        <StyledTableCell >
                           {user.role}
                         </StyledTableCell>
                         <StyledTableCell

@@ -307,7 +307,13 @@ export default function DeviceListUser() {
                             Last seen {moment(device.latestHandshakeAt).startOf('seconds').fromNow()}
                           </Typography>
                         ) : (
-                          "N/A"
+                          <Typography
+                            variant="body2"
+                            sx={{ color: "gray", textAlign: "left" }}
+                          >
+                            
+                          </Typography>
+                         
                         )}
                       </StyledTableCell>
 

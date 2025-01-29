@@ -198,7 +198,7 @@ export default function Devices() {
                     <TableRow>
                       <StyledTableCell>Name</StyledTableCell>
                       <StyledTableCell
-                        sx={{ textAlign: "left", paddingLeft: 4.5 }}
+                        sx={{ textAlign: "left" }}
                       >
                         Last seen
                       </StyledTableCell>
@@ -279,13 +279,18 @@ export default function Devices() {
                                 variant="body2"
                                 sx={{ color: "gray", textAlign: "left" }}
                               >
-                                Last seen{" "}
+                                {" "}
                                 {moment(device.latestHandshakeAt)
                                   .startOf("seconds")
                                   .fromNow()}
                               </Typography>
                             ) : (
-                              "N/A"
+                              <Typography
+                                variant="body2"
+                                sx={{ color: "gray", textAlign: "left" }}
+                              >
+
+                              </Typography>
                             )}
                           </StyledTableCell>
 
