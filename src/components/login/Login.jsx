@@ -43,7 +43,7 @@ export default function Login() {
    */
   async function handleLogin(e) {
     e.preventDefault();
-  
+
     if (username.trim().length < 4) {
       toast.error("Username must be at least 4 characters.");
       return;
@@ -52,24 +52,24 @@ export default function Login() {
       toast.error("Password must be at least 8 characters.");
       return;
     }
-  
+
     try {
       const response = await axios.post("/auth/login", {
         username: username.trim(),
         password: password.trim(),
       });
-  
+
       const user = response.data;
-  
+
       if (user && user.username === username && user.role && user.id) {
         localStorage.setItem("username", user.username);
         localStorage.setItem("role", user.role);
         localStorage.setItem("userId", user.id);
-  
+
         toast.success("Login successful!", {
           autoClose: 800,
         });
-  
+
         const redirectPath = localStorage.getItem("redirectAfterLogin") || "/";
         localStorage.removeItem("redirectAfterLogin");
         navigate(redirectPath);
@@ -80,7 +80,7 @@ export default function Login() {
       }
     } catch (err) {
       console.error("Login error:", err);
-  
+
       if (err.response && err.response.status === 401) {
         toast.error("Unauthorized access. Please check your credentials.", {
           autoClose: 800,
@@ -96,7 +96,7 @@ export default function Login() {
       }
     }
   }
-  
+
   return (
     <Grid2
       container
@@ -118,11 +118,12 @@ export default function Login() {
       >
         <Grid2 container direction="column" alignItems="center">
           <Grid2 item>
-            <img
+            <Box
+              component="img"
               src={addNewUser}
               alt="Login Icon"
               className="mb-3"
-              sx={{ maxWidth: "10px", maxHeight: "10px" }}
+              sx={{ maxWidth: 100, maxHeight: 100 }}
             />
           </Grid2>
           <Grid2 item>
@@ -178,14 +179,14 @@ export default function Login() {
             />
           </Grid2>
           <Grid2 item container justifyContent="center" spacing={2}>
-            <Grid2 item >
+            <Grid2 item>
               <Button
                 type="submit"
                 variant="contained"
                 color="primary"
                 fullWidth
                 disabled={!username || !password}
-                sx={{width:100}}
+                sx={{ width: 100 }}
               >
                 Login
               </Button>
