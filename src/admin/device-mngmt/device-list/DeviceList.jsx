@@ -20,6 +20,7 @@ import {
   IconButton,
   Box,
   Typography,
+  TableHead,
 } from "@mui/material";
 import { styled } from "@mui/system";
 import axios from "../../../index";
@@ -44,7 +45,6 @@ export default function Devices() {
   const [qrCodeVisible, setQrCodeVisible] = useState(false);
   const navigate = useNavigate();
 
-
   const fetchDevices = async () => {
     const loggedInUser = localStorage.getItem("username");
     if (loggedInUser) {
@@ -55,7 +55,7 @@ export default function Devices() {
       if (response && response.data) {
         setDevices(response.data);
       } else {
-        toast.error("Failed to fetch devices", { autoClose: 800 });
+        console.error("Failed to fetch devices");
       }
     } catch (err) {
       if (err.response?.status === 401) {
@@ -63,13 +63,8 @@ export default function Devices() {
         localStorage.removeItem("role");
         localStorage.removeItem("userId");
         navigate("/login");
-        toast.error("Unauthorized access. Please log in again!", {
-          autoClose: 800,
-        });
       } else {
-        toast.error("Failed to fetch devices. Please try again!", {
-          autoClose: 800,
-        });
+        console.error("Failed to fetch devices. Please try again!");
       }
     }
   };
@@ -79,11 +74,10 @@ export default function Devices() {
 
     const intervalId = setInterval(() => {
       fetchDevices();
-    }, 1000); 
+    }, 1000);
 
-    return () => clearInterval(intervalId); 
+    return () => clearInterval(intervalId);
   }, []);
-
 
   const handleDeleteAction = async (action, id = null) => {
     switch (action) {
@@ -112,13 +106,8 @@ export default function Devices() {
             localStorage.removeItem("role");
             localStorage.removeItem("userId");
             navigate("/login");
-            toast.error("Unauthorized. Please log in again.", {
-              autoClose: 800,
-            });
           } else if (err.response?.status === 403) {
-            toast.error("User lacks permission to delete this device.", {
-              autoClose: 800,
-            });
+            console.error("User lacks permission to delete this device.");
           } else if (err.response?.status === 404) {
             toast.error("Location ID does not exist.", { autoClose: 800 });
           } else {
@@ -205,6 +194,21 @@ export default function Devices() {
                     borderCollapse: "collapse",
                   }}
                 >
+                  <TableHead>
+                    <TableRow>
+                      <StyledTableCell>Name</StyledTableCell>
+                      <StyledTableCell
+                        sx={{ textAlign: "left" }}
+                      >
+                        Last seen
+                      </StyledTableCell>
+                      <StyledTableCell
+                        sx={{ textAlign: "end", paddingRight: 7 }}
+                      >
+                        Actions
+                      </StyledTableCell>
+                    </TableRow>
+                  </TableHead>
                   <TableBody>
                     {devices.map((device) => {
                       const isOnline = isDeviceOnline(device.latestHandshakeAt);
@@ -239,22 +243,10 @@ export default function Devices() {
                               >
                                 <MonitorTwoToneIcon
                                   fontSize="medium"
-                                  color="action"
+                                  sx={{
+                                    color: isOnline ? "green" : "black",
+                                  }}
                                 />
-                                {isOnline && (
-                                  <Box
-                                    sx={{
-                                      position: "absolute",
-                                      top: 0,
-                                      left: 0,
-                                      width: 10,
-                                      height: 10,
-                                      borderRadius: "50%",
-                                      backgroundColor: "green",
-                                      border: "2px solid white",
-                                    }}
-                                  />
-                                )}
                               </Box>
                               <Box sx={{ flexGrow: 1 }}>
                                 <Typography
@@ -276,17 +268,30 @@ export default function Devices() {
 
                           <StyledTableCell
                             sx={{
-                              textAlign: "center",
+                              textAlign: "left",
                               wordWrap: "break-word",
                               whiteSpace: "normal",
                               fontSize: "0.9rem",
                             }}
                           >
-                            {device.latestHandshakeAt
-                              ? moment(device.latestHandshakeAt).format(
-                                  "D MMMM YYYY, h:mm a"
-                                )
-                              : "N/A"}
+                            {device.latestHandshakeAt ? (
+                              <Typography
+                                variant="body2"
+                                sx={{ color: "gray", textAlign: "left" }}
+                              >
+                                {" "}
+                                {moment(device.latestHandshakeAt)
+                                  .startOf("seconds")
+                                  .fromNow()}
+                              </Typography>
+                            ) : (
+                              <Typography
+                                variant="body2"
+                                sx={{ color: "gray", textAlign: "left" }}
+                              >
+
+                              </Typography>
+                            )}
                           </StyledTableCell>
 
                           <StyledTableCell

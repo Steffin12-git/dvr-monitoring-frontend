@@ -13,6 +13,7 @@ import {
   IconButton,
   Box,
   Typography,
+  TableHead,
 } from "@mui/material";
 import { styled } from "@mui/system";
 import { Link, useNavigate } from "react-router-dom";
@@ -48,7 +49,7 @@ export default function ListUser() {
         if (response && response.data) {
           setUsers(response.data);
         } else {
-          toast.error("Failed to fetch users", { autoClose: 800 });
+          console.error("Failed to fetch users");
         }
       } catch (err) {
         if (err.response?.status === 401) {
@@ -62,9 +63,7 @@ export default function ListUser() {
             autoClose: 800,
           });
         } else {
-          toast.error("Failed to fetch users. Please try again!", {
-            autoClose: 800,
-          });
+          console.error("Failed to fetch users. Please try again!");
         }
         console.error("Error fetching users", err);
       }
@@ -76,7 +75,7 @@ export default function ListUser() {
     }, 3000);
 
     return () => clearInterval(intervalId);
-  },[]);
+  }, []);
 
   /**
    * Handles various delete actions
@@ -101,7 +100,6 @@ export default function ListUser() {
               localStorage.removeItem("role");
               localStorage.removeItem("userId");
               navigate("/login");
-              toast.error("Your account has been deleted. Please log in again.", { autoClose: 800 });
             } else {
               setUsers(users.filter((user) => user.id !== selectedUserId));
               toast.success("User deleted successfully", {
@@ -109,16 +107,14 @@ export default function ListUser() {
               });
             }
           } else {
-            toast.error("Failed to delete user", {
-              autoClose: 800,
-            });
+            console.error("Failed to delete user");
           }
         } catch (err) {
           if (err.response?.status === 401) {
             localStorage.removeItem("username");
             localStorage.removeItem("role");
             localStorage.removeItem("userId");
-            navigate("/login");  
+            navigate("/login");
             toast.error("Unauthorized: Please log in.", { autoClose: 800 });
           } else if (err.response?.status === 403) {
             toast.error(
@@ -204,16 +200,38 @@ export default function ListUser() {
                 }}
               >
                 <Table>
+                  <TableHead>
+                    <TableRow>
+                      <StyledTableCell sx={{ textAlign: "left" }}>
+                        Name
+                      </StyledTableCell>
+                      <StyledTableCell >
+                        Role
+                      </StyledTableCell>
+                      <StyledTableCell
+                        sx={{ textAlign: "end", paddingRight: 3 }}
+                      >
+                        Actions
+                      </StyledTableCell>
+                    </TableRow>
+                  </TableHead>
+
                   <TableBody>
                     {users.map((user) => (
                       <TableRow key={user.id}>
                         <StyledTableCell sx={{ textAlign: "left" }}>
                           {user.username}
                         </StyledTableCell>
-                        <StyledTableCell sx={{ textAlign: "left" }}>
+                        <StyledTableCell >
                           {user.role}
                         </StyledTableCell>
-                        <StyledTableCell>
+                        <StyledTableCell
+                          sx={{
+                            display: "flex",
+                            justifyContent: "flex-end",
+                            alignItems: "center",
+                          }}
+                        >
                           <Link
                             to={`/admin/users/update/${user.id}`}
                             state={{ username: user.username, role: user.role }}
