@@ -110,7 +110,7 @@ export default function DeviceListUser() {
           navigate("/login");
           toast.error("Unauthorized. Please log in.");
         } else {
-          toast.error("Error fetching data. Please try again.");
+          console.error("Error fetching data. Please try again.");
         }
       }
     }
@@ -139,6 +139,7 @@ export default function DeviceListUser() {
     setAnchorEl(null);
   };
 
+  
   return (
     <ThemeProvider theme={demoTheme}>
       <Box
@@ -268,22 +269,10 @@ export default function DeviceListUser() {
                           >
                             <MonitorTwoToneIcon
                               fontSize="medium"
-                              color="black"
+                              sx={{
+                                color: isOnline ? "green" : "black",
+                              }}
                             />
-                            {isOnline && (
-                              <Box
-                                sx={{
-                                  position: "absolute",
-                                  top: 0,
-                                  left: 0,
-                                  width: 10,
-                                  height: 10,
-                                  borderRadius: "50%",
-                                  backgroundColor: "green",
-                                  border: "2px solid white",
-                                }}
-                              />
-                            )}
                           </Box>
 
                           <Box
@@ -310,11 +299,16 @@ export default function DeviceListUser() {
                       </StyledTableCell>
 
                       <StyledTableCell>
-                        {device.latestHandshakeAt
-                          ? moment(device.latestHandshakeAt).format(
-                              "D MMMM YYYY, h:mm a"
-                            )
-                          : "N/A"}
+                        {device.latestHandshakeAt ? (
+                          <Typography
+                            variant="body2"
+                            sx={{ color: "gray", textAlign: "left" }}
+                          >
+                            Last seen {moment(device.latestHandshakeAt).startOf('seconds').fromNow()}
+                          </Typography>
+                        ) : (
+                          "N/A"
+                        )}
                       </StyledTableCell>
 
                       <StyledTableCell
