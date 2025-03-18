@@ -15,6 +15,7 @@ import {
 import {
   BorderColor as BorderColorIcon,
   Delete as DeleteIcon,
+  Monitor,
 } from "@mui/icons-material";
 import QrCodeScannerIcon from "@mui/icons-material/QrCodeScanner";
 import axios from "../../../../main";
@@ -27,6 +28,7 @@ import UpdateLocationModal from "../update-location/UpdateLocationModal";
 import QrcodeLocation from "../qr-location/QrcodeLocation";
 import DownloadFile from "../conf-download/DownloadFile";
 import { useNavigate } from "react-router-dom";
+import { isDeviceOnline } from "../../../../utils/isDeviceOnline";
 
 
 /**
@@ -76,7 +78,6 @@ const LocationList: React.FC = (): JSX.Element => {
       const { data } = await axios.get<Location[]>("/locations", {
         withCredentials: true,
       });
-      console.log("Fetched locations:", data);
       setLocations(data);
     }catch (error) {
       if (axios.isAxiosError(error)) {
@@ -248,7 +249,7 @@ const LocationList: React.FC = (): JSX.Element => {
                 </Typography>
                 <Button
                   variant="contained"
-                  onClick={handleOpenModal} // Open modal on click
+                  onClick={handleOpenModal} 
                   sx={{
                     backgroundColor: "#2d3748",     
                    "&:hover": { backgroundColor: "#1a202c" },
@@ -286,55 +287,92 @@ const LocationList: React.FC = (): JSX.Element => {
                   </TableHead>
 
                   <TableBody>
-                    {locations.map((location, index) => (
-                      <TableRow
-                        key={location.id}
-                        hover
-                        sx={{
-                          bgcolor: index % 2 === 0 ? "#f4ebeb" : "rgb(230, 222, 222)",
-                          "&:last-child td, &:last-child th": { border: 0 },
-                        }}
-                      >
-                        <TableCell sx={{ textAlign: "left"}}>
-                          {location.name} <br/> {location.ipAddress}
-                        </TableCell>
+  {locations.map((location, index) => {
+    const online = isDeviceOnline(location.latestHandshakeAt); 
 
-                        <TableCell sx={{ textAlign: "left"}}>
-                          {location.latestHandshakeAt
-                                      ? moment(location.latestHandshakeAt).startOf("seconds").fromNow()
-                                      : "Not available"}
-                        </TableCell>
+    return (
+      <TableRow
+        key={location.id}
+        hover
+        sx={{
+          bgcolor: index % 2 === 0 ? "#f4ebeb" : "rgb(230, 222, 222)",
+          "&:last-child td, &:last-child th": { border: 0 },
+        }}
+      >
+        {/* Name & Online Status */}
+        <TableCell sx={{ textAlign: "left" }}>
+          <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+            {/* Monitor Icon with Online Indicator */}
+            <Box sx={{ position: "relative", display: "inline-block" }}>
+              <Monitor sx={{ color: online ? "limegreen" : "black", fontSize: 30 }} />
 
-                        <TableCell sx={{ display: "flex", justifyContent: "flex-end" }}>
-                          <IconButton
-                            onClick={() => handleOpenUpdateModal(location)}
-                            aria-label="edit"
-                            sx={{ color: "#2d3748", mr: 1 }}
-                          >
-                            <BorderColorIcon />
-                          </IconButton>
+              {/* Green dot indicator if online */}
+              {online && (
+                <Box
+                  sx={{
+                    position: "absolute",
+                    top: 0,
+                    right: 0,
+                    width: 10,
+                    height: 10,
+                    bgcolor: "limegreen",
+                    borderRadius: "50%",
+                    border: "1px solid white",
+                  }}
+                />
+              )}
+            </Box>
 
-                          <IconButton
-                            onClick={() => handleOpenQrCodeModal(location.id)}
-                            aria-label="qrcode"
-                            sx={{ color: "#2d3748", mr: 1 }}
-                          >
-                            <QrCodeScannerIcon />
-                          </IconButton>
+            {/* Location Name & IP Address */}
+            <Box>
+              <Typography variant="body1">{location.name}</Typography>
+              <Typography variant="body2" sx={{ color: "#555" }}>
+                {location.ipAddress}
+              </Typography>
+            </Box>
+          </Box>
+        </TableCell>
 
-                          <DownloadFile deviceID={location.id}/>
+        {/* Last Seen */}
+        <TableCell sx={{ textAlign: "left" }}>
+          {location.latestHandshakeAt
+            ? moment(location.latestHandshakeAt).startOf("seconds").fromNow()
+            : "Not available"}
+        </TableCell>
 
-                          <IconButton
-                            onClick={() => handleOpenDeleteModal(location.id)}
-                            aria-label="delete"
-                            sx={{ color: "#e53e3e" }}
-                          >
-                            <DeleteIcon />
-                          </IconButton>
-                        </TableCell>
-                      </TableRow>
-                    ))}
-                  </TableBody>
+        {/* Actions */}
+        <TableCell sx={{ display: "flex", justifyContent: "flex-end" }}>
+          <IconButton
+            onClick={() => handleOpenUpdateModal(location)}
+            aria-label="edit"
+            sx={{ color: "#2d3748", mr: 1 }}
+          >
+            <BorderColorIcon />
+          </IconButton>
+
+          <IconButton
+            onClick={() => handleOpenQrCodeModal(location.id)}
+            aria-label="qrcode"
+            sx={{ color: "#2d3748", mr: 1 }}
+          >
+            <QrCodeScannerIcon />
+          </IconButton>
+
+          <DownloadFile deviceID={location.id} />
+
+          <IconButton
+            onClick={() => handleOpenDeleteModal(location.id)}
+            aria-label="delete"
+            sx={{ color: "#e53e3e" }}
+          >
+            <DeleteIcon />
+          </IconButton>
+        </TableCell>
+      </TableRow>
+    );
+  })}
+</TableBody>
+
                 </Table>
               </TableContainer>
             </>

@@ -1,4 +1,4 @@
-import React, { useState, useEffect, JSX } from "react";
+import React, { useState, useEffect, JSX} from "react";
 import {
   Box,
   Button,
@@ -14,14 +14,14 @@ import {
   Snackbar,
   Alert,
 } from "@mui/material";
-import axios from "../../../../main" 
+import axios from "../../../../main";
 import { AxiosError } from "axios";
 import { useNavigate } from "react-router-dom";
 
 
 /**
-* Props for the LocationModal component.
-*/
+ * Props for the LocationModal component.
+ */
 interface LocationModalProps {
   open: boolean;
   onClose: () => void;
@@ -30,7 +30,7 @@ interface LocationModalProps {
 
 
 /**
- * Represents a URL profile containing a name and an array of URLs.
+ * Represents a URL profile fetched from the API.
  */
 interface UrlProfile {
   name: string;
@@ -39,13 +39,23 @@ interface UrlProfile {
 
 
 /**
- * A modal component for adding a new location.
+ * 
+ * A modal component that allows users to add a new location.
+ * 
+ * Features:
+ * - Input field for entering the location name.
+ * - Dropdown select for choosing a URL profile.
+ * - Checkbox for enabling or disabling the location.
+ * - Fetches URL profiles from an API endpoint.
+ * - Displays error messages and handles API responses.
+ * - Shows success and error notifications using Snackbar.
  *
- * @param {LocationModalProps} props - The props for the LocationModal component.
- * @returns {JSX.Element} The LocationModal component.
+ * @component
+ * @param {LocationModalProps} props - Props for the component.
+ * @returns {JSX.Element} The rendered LocationModal component.
  */
 const LocationModal: React.FC<LocationModalProps> = ({ open, onClose, onLocationAdded }: LocationModalProps): JSX.Element => {
-  const navigate = useNavigate(); 
+  const navigate = useNavigate();
 
   const [name, setName] = useState<string>("");
   const [urlProfile, setUrlProfile] = useState<string>("");
@@ -58,13 +68,6 @@ const LocationModal: React.FC<LocationModalProps> = ({ open, onClose, onLocation
     severity: "success",
   });
 
-
-  /**
-   * Fetches the list of URL profiles from the API.
-   * Redirects to the login page if authentication fails.
-   * @async
-   * @returns {Promise<void>}
-   */
   const fetchUrlProfiles = async (): Promise<void> => {
     try {
       const { data } = await axios.get<UrlProfile[]>("/urlProfiles", { withCredentials: true });
@@ -80,11 +83,10 @@ const LocationModal: React.FC<LocationModalProps> = ({ open, onClose, onLocation
 
       if (err.response?.status === 401) {
         setError("Unauthorized! Redirecting to login.");
-          localStorage.removeItem("username");
-          localStorage.removeItem("role");
-          localStorage.removeItem("userId");
-          navigate("/login", { replace: true });
-
+        localStorage.removeItem("username");
+        localStorage.removeItem("role");
+        localStorage.removeItem("userId");
+        navigate("/login", { replace: true });
       }
     }
   };
@@ -95,11 +97,12 @@ const LocationModal: React.FC<LocationModalProps> = ({ open, onClose, onLocation
 
 
 
-  /**
-   * Handles the addition of a new location.
-   * Validates input fields and makes an API request to add the location.
-   * Displays error messages or success feedback accordingly.
+   /**
+   * Handles adding a new location by making a POST request to the API.
+   * Performs validation before sending the request.
+   * 
    * @async
+   * @function handleAddLocation
    * @returns {Promise<void>}
    */
   const handleAddLocation = async (): Promise<void> => {
@@ -110,8 +113,9 @@ const LocationModal: React.FC<LocationModalProps> = ({ open, onClose, onLocation
       return;
     }
 
-    if (!/^[a-zA-Z0-9]+$/.test(name)) {
-      setError("Name must be alphanumeric.");
+    const nameRegex = /^(?=[\p{L}\p{N}._])(?!.*[_.]{2})[^_.].*[^_.]$/gu;
+    if (!nameRegex.test(name)) {
+      setError("Invalid name format. Use letters, numbers, dots, or underscores without consecutive or trailing dots/underscores.");
       return;
     }
 
@@ -121,21 +125,19 @@ const LocationModal: React.FC<LocationModalProps> = ({ open, onClose, onLocation
     }
 
     try {
-        const response = await axios.post(
+      const response = await axios.post(
         "/locations",
         { name, urlProfile, isEnabled },
         { withCredentials: true }
       );
 
-      if(response.status == 200 || response.status == 201){
-          setSnackbar({ open: true, message: "Location added successfully!", severity: "success" });
-          handleClose();
-          onLocationAdded();
-          return;
+      if (response.status === 200 || response.status === 201) {
+        setSnackbar({ open: true, message: "Location added successfully!", severity: "success" });
+        handleClose();
+        onLocationAdded();
+        return;
       }
     } catch (err) {
-    //   const errorResponse = (err as AxiosError).response;
-
       if (axios.isAxiosError(err)) {
         const status = err.response?.status;
 
@@ -148,7 +150,7 @@ const LocationModal: React.FC<LocationModalProps> = ({ open, onClose, onLocation
             localStorage.removeItem("username");
             localStorage.removeItem("role");
             localStorage.removeItem("userId");
-            navigate("/login"); 
+            navigate("/login");
             break;
           case 403:
             setError("Permission denied. Admin access required.");
@@ -165,16 +167,18 @@ const LocationModal: React.FC<LocationModalProps> = ({ open, onClose, onLocation
     }
   };
 
+
   /**
-   * Closes the modal and resets the form fields.
-   */   
+   * Handles closing the modal and resets the form fields.
+   */
   const handleClose = () => {
     onClose();
     resetForm();
   };
 
+
   /**
-   * Resets form fields to their default values.
+   * Resets the form fields to their default state.
    */
   const resetForm = () => {
     setName("");
@@ -194,19 +198,29 @@ const LocationModal: React.FC<LocationModalProps> = ({ open, onClose, onLocation
             transform: "translate(-50%, -50%)",
             width: { xs: "90%", sm: 400 },
             bgcolor: "#d8d8e1",
-            p: 4,
             borderRadius: "8px",
             boxShadow: 24,
             outline: "none",
           }}
         >
-          <Box sx={{ display: "flex", justifyContent: "center", alignItems: "center", mb: 7 }}>
-            <Typography variant="h4" sx={{ fontWeight: 700, letterSpacing: 0.5, textAlign: "center" }}>
+          {/* Modal Title with Styled Background */}
+          <Box
+            sx={{
+              bgcolor: "#45527a",
+              color: "white",
+              textAlign: "center",
+              p: 2,
+              borderTopLeftRadius: "8px",
+              borderTopRightRadius: "8px",
+            }}
+          >
+            <Typography variant="h6" sx={{ fontWeight: "bold" }}>
               ADD LOCATION
             </Typography>
           </Box>
 
-          <Box component="form" sx={{ display: "grid", gap: 2 }}>
+          {/* Modal Content */}
+          <Box component="form" sx={{ p: 4 }}>
             <TextField
               fullWidth
               label="Name"
@@ -216,7 +230,7 @@ const LocationModal: React.FC<LocationModalProps> = ({ open, onClose, onLocation
               InputProps={{ sx: { borderRadius: "8px" } }}
             />
 
-            <FormControl fullWidth>
+            <FormControl fullWidth sx={{ mt: 2 }}>
               <InputLabel>URL Profile</InputLabel>
               <Select
                 value={urlProfile || ""}
@@ -242,6 +256,7 @@ const LocationModal: React.FC<LocationModalProps> = ({ open, onClose, onLocation
             <FormControlLabel
               control={<Checkbox checked={isEnabled} onChange={(e) => setIsEnabled(e.target.checked)} />}
               label="Enabled"
+              sx={{ mt: 2 }}
             />
 
             {error && (
@@ -250,14 +265,13 @@ const LocationModal: React.FC<LocationModalProps> = ({ open, onClose, onLocation
               </Typography>
             )}
 
-            <Box sx={{ display: "flex", gap: 2, mt: 3 }}>
+            {/* Modal Actions */}
+            <Box sx={{ display: "flex", justifyContent: "center", gap: 2, mt: 3 }}>
               <Button
-                fullWidth
                 variant="contained"
                 onClick={handleAddLocation}
                 sx={{
-                  borderRadius: "8px",
-                  py: 1,
+                  px: 4,
                   backgroundColor: "#2d3b63",
                   "&:hover": { backgroundColor: "#1a243d" },
                 }}
@@ -265,12 +279,10 @@ const LocationModal: React.FC<LocationModalProps> = ({ open, onClose, onLocation
                 Add
               </Button>
               <Button
-                fullWidth
                 variant="outlined"
                 onClick={handleClose}
                 sx={{
-                  borderRadius: "8px",
-                  py: 1,
+                  px: 4,
                   color: "#2d3b63",
                   borderColor: "#2d3b63",
                   "&:hover": {

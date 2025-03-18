@@ -27,7 +27,6 @@ interface LoginFormState {
 }
 
 
-
 /**
  * LoginPage component which provides a user authentication form.
  * 
@@ -88,7 +87,6 @@ const LoginPage: React.FC = () => {
         password: formData.password,
       });
 
-      console.log("Login successful", response.data);
       setError("");
 
       const { id, username, role } = response.data;
@@ -96,7 +94,9 @@ const LoginPage: React.FC = () => {
       localStorage.setItem("username", username);
       localStorage.setItem("role", role);
 
-      navigate("/", { replace: true });
+      const redirectPath = localStorage.getItem("redirectAfterLogin") || "/";
+      localStorage.removeItem("redirectAfterLogin");
+      navigate(redirectPath);
     } catch (error) {
       if (axios.isAxiosError(error)) {
         if (error.response?.status === 401) {

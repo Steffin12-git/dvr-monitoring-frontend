@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { JSX, useState } from "react";
 import axios from "axios";
 import {
   Box,
@@ -10,6 +10,10 @@ import {
   Alert,
 } from "@mui/material";
 
+
+/**
+ * Props for the DeleteConfirmationModal component.
+ */
 interface DeleteConfirmationModalProps {
   open: boolean;
   onClose: () => void;
@@ -20,15 +24,28 @@ interface DeleteConfirmationModalProps {
   isLoading?: boolean;
 }
 
+
+/**
+ * A confirmation modal for deleting a user.
+ *
+ * - Displays a confirmation message before deletion.
+ * - Calls the `onConfirm` function when the delete button is clicked.
+ * - Shows a loading indicator while the deletion request is in progress.
+ * - Displays success or error messages using a snackbar.
+ *
+ * @component
+ * @param {DeleteConfirmationModalProps} props - The component props.
+ * @returns {JSX.Element} The delete confirmation modal.
+ */
 const DeleteModal: React.FC<DeleteConfirmationModalProps> = ({
   open,
   onClose,
   onConfirm,
   userId,
   title = "Confirm Deletion",
-  description = "Are you sure you want to delete this user? This action cannot be undone.",
+  description = "Are you sure you want to delete this user?",
   isLoading = false,
-}) => {
+}: DeleteConfirmationModalProps): JSX.Element => {
   const [loading, setLoading] = useState(isLoading);
   const [snackbar, setSnackbar] = useState<{ open: boolean; message: string; severity: "success" | "error" }>({
     open: false,
@@ -36,6 +53,13 @@ const DeleteModal: React.FC<DeleteConfirmationModalProps> = ({
     severity: "success",
   });
 
+
+  /**
+   * Handles the delete action.
+   * - Validates the user ID.
+   * - Calls the `onConfirm` function.
+   * - Displays success or error messages based on the API response.
+   */
   const handleDelete = async () => {
     if (!userId || typeof userId !== "string" || userId.trim() === "") {
       setSnackbar({ open: true, message: "Invalid user ID.", severity: "error" });
@@ -44,9 +68,9 @@ const DeleteModal: React.FC<DeleteConfirmationModalProps> = ({
   
     setLoading(true);
     try {
-      await onConfirm(userId); // Call API delete function
-      setSnackbar({ open: true, message: "deleted successfully!", severity: "success" });
-      onClose(); // Close modal after success
+      await onConfirm(userId); 
+      setSnackbar({ open: true, message: "Deleted successfully!", severity: "success" });
+      onClose(); 
     } catch (error) {
       if (axios.isAxiosError(error)) {
         const status = error.response?.status;
@@ -85,54 +109,65 @@ const DeleteModal: React.FC<DeleteConfirmationModalProps> = ({
             transform: "translate(-50%, -50%)",
             width: { xs: "90%", sm: 400 },
             bgcolor: "#d8d8e1",
-            p: 4,
             borderRadius: "8px",
             boxShadow: 24,
             outline: "none",
             textAlign: "center",
+            overflow: "hidden",
           }}
         >
-          <Typography variant="h5" fontWeight={600} mb={2}>
-            {title}
-          </Typography>
+          {/* Title Section - Styled like other modals */}
+          <Box
+            sx={{
+              bgcolor: "#45527a",
+              color: "white",
+              textAlign: "center",
+              py: 1.5,
+            }}
+          >
+            <Typography variant="h6">{title}</Typography>
+          </Box>
 
-          <Typography variant="body1" color="textSecondary" mb={3}>
-            {description}
-          </Typography>
+          {/* Content Section */}
+          <Box sx={{ p: 3 }}>
+            <Typography variant="body1" color="textSecondary" mb={3}>
+              {description}
+            </Typography>
 
-          <Box sx={{ display: "flex", gap: 2, justifyContent: "center" }}>
-            <Button
-              variant="contained"
-              onClick={handleDelete}
-              sx={{
-                borderRadius: "8px",
-                py: 1,
-                backgroundColor: "#e53e3e",
-                "&:hover": {
-                  backgroundColor: "#c53030",
-                },
-              }}
-              disabled={loading}
-            >
-              {loading ? <CircularProgress size={24} sx={{ color: "white" }} /> : "Delete"}
-            </Button>
-            <Button
-              variant="outlined"
-              onClick={onClose}
-              sx={{
-                borderRadius: "8px",
-                py: 1,
-                color: "#2d3b63",
-                borderColor: "#2d3b63",
-                "&:hover": {
-                  borderColor: "#1a243d",
-                  backgroundColor: "rgba(45, 59, 99, 0.04)",
-                },
-              }}
-              disabled={loading}
-            >
-              Cancel
-            </Button>
+            <Box sx={{ display: "flex", gap: 2, justifyContent: "center" }}>
+              <Button
+                variant="contained"
+                onClick={handleDelete}
+                sx={{
+                  borderRadius: "8px",
+                  py: 1,
+                  backgroundColor: "#45527a",
+                  "&:hover": {
+                    backgroundColor: "#c53030",
+                  },
+                }}
+                disabled={loading}
+              >
+                {loading ? <CircularProgress size={24} sx={{ color: "white" }} /> : "Delete"}
+              </Button>
+              <Button
+                variant="outlined"
+                onClick={onClose}
+                sx={{
+                  borderRadius: "8px",
+                  py: 1,
+                  color: "#2d3b63",
+                  borderColor: "#2d3b63",
+                  "&:hover": {
+                    borderColor: "#1a243d",
+                    backgroundColor: "rgba(45, 59, 99, 0.04)",
+                  },
+                }}
+                disabled={loading}
+              >
+                Cancel
+              </Button>
+            </Box>
           </Box>
         </Box>
       </Modal>

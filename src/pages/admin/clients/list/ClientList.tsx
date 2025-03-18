@@ -16,56 +16,66 @@ import {
   BorderColor as BorderColorIcon,
   Delete as DeleteIcon,
 } from "@mui/icons-material";
+import QrCodeScannerIcon from "@mui/icons-material/QrCodeScanner";
 import axios from "../../../../main";
 import Sidebar from "../../../../components/sidebar/Sidebar";
 import ProfileMenu from "../../../../components/navbar/ProfileMenu";
-import UserModal from "../add-users/UserModal"; 
 import DeleteModal from "../../../../components/delete/DeleteModal";
-import UpdateUserModal from "../update-user/UpdateUserModal";
+import moment from "moment";
+import AddClientModal from "../add-client/AddClientModal";
+import UpdateClientModal from "../update-client/UpdateClientModal";
+import QrcodeClient from "../qr-clients/QrcodeClient";
+import DownloadFileClient from "../config-download/DownloadFileClient";
 import { useNavigate } from "react-router-dom";
 
 
 /**
- * Interface representing a user object.
+ * Interface representing a Client object.
  */
-interface User {
+interface Client {
   id: string;
-  username: string;
-  role: string[];
+  name: string;
+  ipAddress: string;
+  latestHandshakeAt: string;
 }
 
 
 /**
- * Component that displays a list of users, allowing for user management 
- * (adding, updating, and deleting users).
+ * Component that displays a list of Clients, allowing for Client management 
+ * (adding, updating, deleting, displaying qr code and downloading configuration file of Client).
  *
  * @component
  * @returns {JSX.Element} The rendered UsersList component.
  */
-const UsersList: React.FC = (): JSX.Element => {
-  const [users, setUsers] = useState<User[]>([]);
+
+const ClientList: React.FC = (): JSX.Element => {
+  const [Clients, setClients] = useState<Client[]>([]);
   const [collapsed, setCollapsed] = useState<boolean>(false);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
-  const [isModalOpen, setIsModalOpen] = useState(false); // Modal state
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
-  const [selectedUserId, setSelectedUserId] = useState<string | null>(null);
+  const [selectedClientId, setSelectedClientId] = useState<string | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
+  const [isAddClientModalOpen, setIsAddClientModalOpen] = useState(false);
   const [updateModalOpen, setUpdateModalOpen] = useState(false);
-  const [selectedUser, setSelectedUser] = useState<{ id: string; username: string; role: string } | null>(null);
+  const [selectedClient, setselectedClient] = useState<Client | null>(null);
+  const [qrcodeClientOpen, setQrcodeClientOpen] = useState(false); 
+  const [qrcodeClientId, setQrcodeClientId] = useState<string | null>(null); 
   const navigate = useNavigate();
-
   
+  
+
   /**
-  * Fetches the list of users from the server.
+  * Fetches the list of Clients from the server.
   * Handles errors and redirects to login if the user is unauthorized.
   */
-  const fetchUsers = async () => {
+  const fetchClients = async () => {
     try {
-      const { data } = await axios.get<User[]>("/users", {
+      const { data } = await axios.get<Client[]>("/clients", {
         withCredentials: true,
       });
-      setUsers(data);
+      console.log("Fetched Clients:", data);
+      setClients(data);
     }catch (error) {
       if (axios.isAxiosError(error)) {
         if (error.response?.status === 401) {
@@ -75,45 +85,31 @@ const UsersList: React.FC = (): JSX.Element => {
           localStorage.removeItem("userId");
           navigate("/login", { replace: true });
         } else if (error.response?.status === 403) {
-          alert("You do not have permission to view locations.");
+          setError("You do not have permission to view Clients.");
         } else {
-          console.error("Error fetching locations:", error);
-          setError("Failed to load locations. Please check your permissions.");
+          console.error("Error fetching Clients:", error);
+          setError("Failed to load Clients. Please check your permissions.");
         }
       }
     } finally {
       setLoading(false);
     }
   };
-  
+
   useEffect(() => {
-    fetchUsers();
-    const intervalId = setInterval(fetchUsers, 1000);
+    fetchClients();
+    const intervalId = setInterval(fetchClients, 1000);
     return () => clearInterval(intervalId);
   }, []);
-  
 
-
-  /**
-   * Opens the add user modal.
-  */
-  const handleOpenModal = () => setIsModalOpen(true);
 
 
   /**
-   * Closes the Add User modal.
+   * Opens the Delete Confirmation modal for a specific Client.
+   * @param {string} ClientId - The ID of the Client to delete.
    */
-  const handleCloseModal = () => {
-    setIsModalOpen(false);
-  };
-  
-
-  /**
-   * Opens the Delete Confirmation modal for a specific user.
-   * @param {string} userId - The ID of the user to delete.
-   */
-  const handleOpenDeleteModal = (userId: string) => {
-    setSelectedUserId(userId);
+  const handleOpenDeleteModal = (ClientId: string) => {
+    setSelectedClientId(ClientId);
     setIsDeleteModalOpen(true);
   };
 
@@ -123,48 +119,74 @@ const UsersList: React.FC = (): JSX.Element => {
    */
   const handleCloseDeleteModal = () => {
     setIsDeleteModalOpen(false);
-    setSelectedUserId(null);
+    setSelectedClientId(null);
   };
 
 
   /**
-   * Deletes selected user 
-   * Removes the user from the state if the request is successful.
+   * Deletes selected Client 
+   * Removes the Client from the state if the request is successful.
    */
-  const handleDeleteUser = async () => {
-    if (!selectedUserId) return;
-  
+  const handleDeleteClient = async () => {
+    if (!selectedClientId) return;
+
     setIsDeleting(true);
-  
+
     try {
-      await axios.delete(`/users/${selectedUserId}`, { withCredentials: true });
-      setUsers((prevUsers) => prevUsers.filter((user) => user.id !== selectedUserId));
+      await axios.delete(`/clients/${selectedClientId}`, { withCredentials: true });
+      setClients((prevClients) => prevClients.filter((loc) => loc.id !== selectedClientId));
       handleCloseDeleteModal();
-    } catch (error) {
-      console.error("Error deleting user:", error);
+    } catch (error: any) {
+      if (axios.isAxiosError(error)) {
+        if (error.response?.status === 401) {
+          setError("Unauthorized! Redirecting to login.");
+          localStorage.removeItem("username");
+          localStorage.removeItem("role");
+          localStorage.removeItem("userId");
+          navigate("/login", { replace: true });
+        } else if (error.response?.status === 403) {
+          setError("You do not have permission to delete this Client.");
+        } else if (error.response?.status === 404) {
+          setError("Client not found. It may have been already deleted.");
+        } else {
+          console.error("Error deleting Client:", error);
+          setError("Error deleting Client:");
+        }
+      }
     } finally {
       setIsDeleting(false);
     }
   };
 
+  /**
+   * opens modal of addding new Client
+   */
+  const handleOpenAddClientModal = () => setIsAddClientModalOpen(true);
 
   /**
-   * Opens the Update User modal with selected user details.
-   * @param {User} user - The user data to be updated.
+   * closes modal of addding Client
    */
-  const handleOpenUpdateModal = (user: User) => {
-    setSelectedUser({ ...user, role: user.role[0] });
+  const handleCloseAddClientModal = () => setIsAddClientModalOpen(false);
+
+  /**
+   * Opens the Update Client modal with selected Client details.
+   * @param {Client} client - The Client data to be updated.
+   */
+  const handleOpenUpdateModal = (client: Client) => {
+    setselectedClient(client);
     setUpdateModalOpen(true);
   };
   
 
-
   /**
-   * Handles the user update event and refetches the user list.
+   * Opens the qr-code Client modal for the selected Client.
+   * @param {ClientId} ClientId - id of the Client of the displayed qrcode.
    */
-  const handleUserUpdated = () => {
-    fetchUsers(); 
+  const handleOpenQrCodeModal = (ClientId: string) => {
+    setQrcodeClientId(ClientId);
+    setQrcodeClientOpen(true);
   };
+    
 
   return (
     <Box sx={{ display: "flex", backgroundColor: "#d8d8e1", minHeight: "100vh" }}>
@@ -182,7 +204,7 @@ const UsersList: React.FC = (): JSX.Element => {
       >
         <ProfileMenu />
 
-        {/* User Table */}
+        {/* Client Table */}
         <Box
           sx={{
             mt: 4,
@@ -216,20 +238,20 @@ const UsersList: React.FC = (): JSX.Element => {
                 }}
               >
                 <Typography variant="h6" sx={{ color: "white", fontWeight: "600" }}>
-                  Users
+                  Clients
                 </Typography>
-
                 <Button
                   variant="contained"
-                  onClick={handleOpenModal} // Open modal on click
+                  onClick={handleOpenAddClientModal} // Open modal on click
                   sx={{
-                    backgroundColor: "#2d3748",
-                    "&:hover": { backgroundColor: "#1a202c" },
+                    backgroundColor: "#2d3748",     
+                   "&:hover": { backgroundColor: "#1a202c" },
                     textTransform: "none",
                   }}
-                >
-                  Add
+                  >        
+                    Add           
                 </Button>
+              
               </Box>
 
               <TableContainer>
@@ -242,7 +264,7 @@ const UsersList: React.FC = (): JSX.Element => {
                       <TableCell
                         sx={{ color: "white", fontWeight: "600", textAlign: "left" }}
                       >
-                        Role
+                        Last Seen
                       </TableCell>
                       <TableCell
                         sx={{
@@ -252,30 +274,34 @@ const UsersList: React.FC = (): JSX.Element => {
                           paddingRight: 5,
                         }}
                       >
-                        Action
+                        Actions
                       </TableCell>
                     </TableRow>
                   </TableHead>
 
                   <TableBody>
-                    {users.map((user, index) => (
+                    {Clients.map((Client, index) => (
                       <TableRow
-                        key={user.id}
+                        key={Client.id}
                         hover
                         sx={{
                           bgcolor: index % 2 === 0 ? "#f4ebeb" : "rgb(230, 222, 222)",
                           "&:last-child td, &:last-child th": { border: 0 },
                         }}
                       >
-                        <TableCell sx={{ textAlign: "left", width: "30%" }}>{user.username}</TableCell>
+                        <TableCell sx={{ textAlign: "left"}}>
+                          {Client.name} <br/> {Client.ipAddress}
+                        </TableCell>
 
-                        <TableCell sx={{ textAlign: "left", width: "30%" }}>
-                          {Array.isArray(user.role) ? user.role.join(", ") : user.role}
+                        <TableCell sx={{ textAlign: "left"}}>
+                          {Client.latestHandshakeAt
+                                      ? moment(Client.latestHandshakeAt).startOf("seconds").fromNow()
+                                      : "Not available"}
                         </TableCell>
 
                         <TableCell sx={{ display: "flex", justifyContent: "flex-end" }}>
                           <IconButton
-                            onClick={() =>  handleOpenUpdateModal(user)}
+                            onClick={() => handleOpenUpdateModal(Client)}
                             aria-label="edit"
                             sx={{ color: "#2d3748", mr: 1 }}
                           >
@@ -283,7 +309,17 @@ const UsersList: React.FC = (): JSX.Element => {
                           </IconButton>
 
                           <IconButton
-                            onClick={() => handleOpenDeleteModal(user.id)}
+                            onClick={() => handleOpenQrCodeModal(Client.id)}
+                            aria-label="qrcode"
+                            sx={{ color: "#2d3748", mr: 1 }}
+                          >
+                            <QrCodeScannerIcon />
+                          </IconButton>
+
+                          <DownloadFileClient deviceID={Client.id}/>
+
+                          <IconButton
+                            onClick={() => handleOpenDeleteModal(Client.id)}
                             aria-label="delete"
                             sx={{ color: "#e53e3e" }}
                           >
@@ -299,29 +335,39 @@ const UsersList: React.FC = (): JSX.Element => {
           )}
         </Box>
       </Box>
+      <AddClientModal
+  open={isAddClientModalOpen}
+  onClose={handleCloseAddClientModal}
+  onClientAdded={fetchClients} 
+/>
 
-      <UserModal open={isModalOpen} onClose={handleCloseModal} onUserAdded={fetchUsers} />
       <DeleteModal
         open={isDeleteModalOpen}
-        userId={selectedUserId || ""}
+        userId={selectedClientId || ""}
         onClose={handleCloseDeleteModal}
-        onConfirm={handleDeleteUser}
-        title="Delete User"
-        description="Are you sure you want to delete this user?"
+        onConfirm={handleDeleteClient}
+        title="Delete Client"
+        description="Are you sure you want to delete this Client?"
         isLoading={isDeleting}
       />
-       {selectedUser && (
-      <UpdateUserModal
-        open={updateModalOpen}
-        onClose={() => setUpdateModalOpen(false)}
-        userId={selectedUser.id}
-        initialUsername={selectedUser.username}
-        initialRole={selectedUser.role}
-        onUserUpdated={handleUserUpdated}
-      />
-    )}
+{selectedClient && (
+  <UpdateClientModal
+    open={updateModalOpen}
+    onClose={() => setUpdateModalOpen(false)}
+    clientId={selectedClient.id} 
+    initialName={selectedClient.name}
+    onClientUpdated={fetchClients} 
+  />
+)}
+{qrcodeClientOpen && qrcodeClientId && (
+  <QrcodeClient 
+    visible={qrcodeClientOpen} 
+    id={qrcodeClientId} 
+    onClose={() => setQrcodeClientOpen(false)} 
+  />
+)}
     </Box>
   );
 };
 
-export default UsersList;
+export default ClientList;
