@@ -6,7 +6,7 @@ This project is a frontend for [DVR Monitoring](https://gitlab.com/webyfy/iot/dv
 
 In the project directory, you can run:
 
-### `yarn start`
+### `yarn dev`
 Runs the app in development mode.  
 Open [http://localhost:3000](http://localhost:3000) to view it in your browser.
 
@@ -21,12 +21,11 @@ Builds the app for production to the `build` folder.
 To run the project locally, you need to create a `.env` file in the root of the project with the following variables:
 
 ```
-REACT_APP_API_URL=http://localhost:8000/api
+VITE_API_URL=http://localhost:8000/api
 ```
 
 This `.env` file allows you to define environment-specific variables that can be accessed within the application.
 
 > **Note:**  
-> The `REACT_APP_API_URL` (and the port) may change depending on the backend configuration. Make sure to update this value based on the actual backend URL and port used in your project.
+> The `VITE_API_URL` (and the port) may change depending on the backend configuration. Make sure to update this value based on the actual backend URL and port used in your project.
 
----
