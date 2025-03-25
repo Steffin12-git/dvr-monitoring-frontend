@@ -6,7 +6,7 @@ import AccountCircleSharpIcon from "@mui/icons-material/AccountCircleSharp";
 import DevicesIcon from "@mui/icons-material/Devices";
 import { DashboardLayout } from "@toolpad/core/DashboardLayout";
 import main_logo from "../../assets/icons/Main_logo.png";
-import { IconButton, Menu, MenuItem } from "@mui/material";
+import { Box, IconButton, Menu, MenuItem, Typography } from "@mui/material";
 import { ToastContainer, toast } from "react-toastify";
 import axios from "../../index";
 import LogoutIcon from "@mui/icons-material/Logout";
@@ -61,8 +61,12 @@ const Sidebar = ({ adminUsername, children }) => {
     e.preventDefault();
     window.location.reload();
   };
+  // const handleMenuClick = (event) => {
+  //   setAnchorEl(event.currentTarget);
+  // };
+
   const handleMenuClick = (event) => {
-    setAnchorEl(event.currentTarget);
+    setAnchorEl((prev) => (prev ? null : event.currentTarget));
   };
 
   const handleMenuClose = () => {
@@ -74,7 +78,7 @@ const Sidebar = ({ adminUsername, children }) => {
       const response = await axios.post("/auth/logout");
       if (response) {
         localStorage.clear();
-         navigate("/login");
+        navigate("/login");
       } else {
         toast.error("Failed to log out!", {
           autoClose: 800,
@@ -132,26 +136,76 @@ const Sidebar = ({ adminUsername, children }) => {
         >
           <ManageAccountsIcon sx={{ fontSize: 30 }} />
         </IconButton>
-        <Menu anchorEl={anchorEl} open={open} onClose={handleMenuClose}>
-          <MenuItem
+        <Menu
+          anchorEl={anchorEl}
+          open={open}
+          onClose={handleMenuClose}
+          PaperProps={{
+            sx: {
+              borderRadius: 3,
+              boxShadow: "0 4px 12px rgba(0, 0, 0, 0.15)",
+              minWidth: 180,
+              backgroundColor: "background.paper", // Using theme background color
+              backdropFilter: "blur(10px)",
+              padding: 0,
+            },
+          }}
+        >
+          {/* Admin Name Section */}
+          <Box
             sx={{
-              borderBottom: "2px solid  #e0e0e0e0",
-              marginBottom: 2,
+              display: "flex",
+              alignItems: "center",
+              gap: 1.5,
+              padding: "8px 16px",
+              borderRadius: "8px 8px 0 0",
+              pointerEvents: "none",
+              userSelect: "none",
+              backgroundColor: "background.default", // Using theme background
             }}
           >
             <AccountCircleSharpIcon
-              sx={{
-                fontSize: 30,
-                marginRight: 0.5,
-              }}
+              sx={{ fontSize: 28, color: "primary.main" }}
             />
-            {adminUsername || "Admin"}
-          </MenuItem>
-          <MenuItem onClick={handleLogout} sx={{ marginLeft: 0 }}>
-            <LogoutIcon sx={{ marginRight: 0.5 }} />
-            Logout
-          </MenuItem>
+            <Typography
+              sx={{ fontSize: 16, fontWeight: "bold", color: "text.primary" }}
+            >
+              {adminUsername || "Admin"}
+            </Typography>
+          </Box>
+
+          {/* Logout Button */}
+          <Box
+            sx={{
+              display: "flex",
+              justifyContent: "center",
+              padding: "6px 12px",
+            }}
+          >
+            <MenuItem
+              onClick={handleLogout}
+              sx={{
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                gap: 1.2,
+                width: "90%",
+                backgroundColor: "primary.main", // Using theme primary color
+                color: "common.white",
+                fontWeight: "bold",
+                borderRadius: "6px",
+                transition: "all 0.3s ease",
+                "&:hover": {
+                  backgroundColor: "primary.dark", // Darker shade for hover
+                },
+              }}
+            >
+              <LogoutIcon sx={{ color: "inherit", fontSize: 20 }} />
+              <Typography variant="body1">Logout</Typography>
+            </MenuItem>
+          </Box>
         </Menu>
+
         {children}
       </DashboardLayout>
     </AppProvider>
